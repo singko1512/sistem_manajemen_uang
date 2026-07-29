@@ -199,12 +199,12 @@ app.post('/api/periods/active', authenticateAdmin, async (req, res) => {
   }
 });
 
-// 8. UPDATE PERIOD DATA (Initial Balance / Cash Breakdown)
+// 8. UPDATE PERIOD DATA (Initial Balance / Cash Breakdown / Weekly Fee)
 app.put('/api/periods/:id', authenticateAdmin, async (req, res) => {
   const { id } = req.params;
-  const { initialBalance, cashAmount, eWalletAmount } = req.body;
+  const { initialBalance, cashAmount, eWalletAmount, weeklyFee } = req.body;
   try {
-    await db.updatePeriod(id, initialBalance, cashAmount, eWalletAmount);
+    await db.updatePeriod(id, initialBalance, cashAmount, eWalletAmount, weeklyFee);
     res.json({ message: "Period updated successfully" });
   } catch (err) {
     console.error("Error updating period:", err);

@@ -125,6 +125,7 @@ export default function App() {
   const [editInitialBalance, setEditInitialBalance] = useState('');
   const [editCash, setEditCash] = useState('');
   const [editEWallet, setEditEWallet] = useState('');
+  const [editWeeklyFee, setEditWeeklyFee] = useState('');
 
   // Offline Fallback Local DB Store
   const [offlineDB, setOfflineDB] = useState(null);
@@ -151,7 +152,7 @@ export default function App() {
   // Get Auth Headers for backend calls
   const getHeaders = () => {
     const headers = { 'Content-Type': 'application/json' };
-    const savedToken = authToken || localStorage.getItem('adminToken');
+    const savedToken = authToken || sessionStorage.getItem('adminToken');
     if (savedToken) {
       headers['Authorization'] = `Bearer ${savedToken}`;
     }
@@ -167,7 +168,7 @@ export default function App() {
     };
     document.addEventListener("mousedown", handleClickOutside);
 
-    const savedToken = localStorage.getItem('adminToken');
+    const savedToken = sessionStorage.getItem('adminToken');
     if (savedToken) {
       setAuthToken(savedToken);
       setIsAdmin(true);
@@ -248,6 +249,7 @@ export default function App() {
       setEditInitialBalance(currentPeriodObj.initialBalance);
       setEditCash(currentPeriodObj.cashAmount);
       setEditEWallet(currentPeriodObj.eWalletAmount);
+      setEditWeeklyFee(currentPeriodObj.weeklyFee || 2000);
     }
 
     if (!isOffline) {
@@ -511,6 +513,30 @@ export default function App() {
     }
   };
 
+  // Helper to split active period ID into month and year
+  const getPeriodParts = (periodId) => {
+    if (!periodId) return { month: '', year: '' };
+    const parts = periodId.split('-');
+    if (parts.length < 2) return { month: '', year: '' };
+    return { month: parts[0], year: parts[1] };
+  };
+
+  const { month: activeMonth, year: activeYear } = getPeriodParts(activePeriod?.id);
+  const availableYears = Array.from(new Set(periods.map(p => p.id.split('-')[1]).filter(Boolean)));
+
+  const handleMonthYearChange = (newMonth, newYear) => {
+    const targetId = `${newMonth}-${newYear}`;
+    const found = periods.find(p => p.id === targetId);
+    if (found) {
+      handlePeriodChange(found.id);
+    } else {
+      const fallback = periods.find(p => p.id.endsWith(`-${newYear}`)) || periods.find(p => p.id.startsWith(`${newMonth}-`));
+      if (fallback) {
+        handlePeriodChange(fallback.id);
+      }
+    }
+  };
+
   // Change Active Period
   const handlePeriodChange = async (pId) => {
     const nextPeriod = periods.find(p => p.id === pId);
@@ -565,7 +591,8 @@ export default function App() {
           body: JSON.stringify({
             initialBalance: Number(editInitialBalance),
             cashAmount: Number(editCash),
-            eWalletAmount: Number(editEWallet)
+            eWalletAmount: Number(editEWallet),
+            weeklyFee: Number(editWeeklyFee)
           })
         });
         if (res.ok) {
@@ -575,7 +602,8 @@ export default function App() {
                 ...p,
                 initialBalance: Number(editInitialBalance),
                 cashAmount: Number(editCash),
-                eWalletAmount: Number(editEWallet)
+                eWalletAmount: Number(editEWallet),
+                weeklyFee: Number(editWeeklyFee)
               };
             }
             return p;
@@ -599,6 +627,7 @@ export default function App() {
         updatedDB.periods[periodIdx].initialBalance = Number(editInitialBalance);
         updatedDB.periods[periodIdx].cashAmount = Number(editCash);
         updatedDB.periods[periodIdx].eWalletAmount = Number(editEWallet);
+        updatedDB.periods[periodIdx].weeklyFee = Number(editWeeklyFee);
       }
       setOfflineDB(updatedDB);
       setPeriods(updatedDB.periods);
@@ -654,7 +683,7 @@ export default function App() {
       if (loginUsername === 'admin' && loginPassword === 'bendahara123') {
         setIsAdmin(true);
         setAuthToken('mock-offline-token');
-        localStorage.setItem('adminToken', 'mock-offline-token');
+        sessionStorage.setItem('adminToken', 'mock-offline-token');
         setShowLoginModal(false);
         setLoginUsername('');
         setLoginPassword('');
@@ -676,7 +705,7 @@ export default function App() {
       if (res.ok) {
         setIsAdmin(true);
         setAuthToken(data.token);
-        localStorage.setItem('adminToken', data.token);
+        sessionStorage.setItem('adminToken', data.token);
         setShowLoginModal(false);
         setLoginUsername('');
         setLoginPassword('');
@@ -694,7 +723,7 @@ export default function App() {
   const handleLogout = () => {
     setIsAdmin(false);
     setAuthToken(null);
-    localStorage.removeItem('adminToken');
+    sessionStorage.removeItem('adminToken');
     setActiveTab('tagihan');
     showToast("Berhasil keluar dari sesi bendahara. Kembali ke mode siswa (read-only). 🌸", "success");
   };
@@ -995,17 +1024,33 @@ export default function App() {
                 <span className="sm:hidden">Login 🔑</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1.5 sm:gap-3">
-                {/* Period Selector (Only shown for Admin) */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Month Selector */}
                 <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
                   <select
-                    value={activePeriod?.id || ''}
-                    onChange={(e) => handlePeriodChange(e.target.value)}
-                    className="text-[10px] sm:text-xs font-semibold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer max-w-[85px] sm:max-w-none"
+                    value={activeMonth}
+                    onChange={(e) => handleMonthYearChange(e.target.value, activeYear)}
+                    className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
                   >
-                    {periods.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
+                    {['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'].map(m => {
+                      const displayMonth = m.charAt(0).toUpperCase() + m.slice(1);
+                      const exists = periods.some(p => p.id.startsWith(`${m}-`));
+                      if (!exists) return null;
+                      return <option key={m} value={m}>{displayMonth}</option>;
+                    })}
+                  </select>
+                </div>
+
+                {/* Year Selector */}
+                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
+                  <select
+                    value={activeYear}
+                    onChange={(e) => handleMonthYearChange(activeMonth, e.target.value)}
+                    className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                  >
+                    {availableYears.map(y => (
+                      <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
                 </div>
@@ -1885,6 +1930,20 @@ export default function App() {
                                 className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-450 font-semibold"
                               />
                             </div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 my-3 pt-3">
+                          <h4 className="text-[9px] font-bold text-slate-400 uppercase mb-2">Iuran Kas per Minggu</h4>
+                          <div>
+                            <label className="block text-[8px] font-bold text-slate-450 mb-1 uppercase">Nominal Iuran (Rp)</label>
+                            <input
+                              type="number"
+                              required
+                              value={editWeeklyFee}
+                              onChange={(e) => setEditWeeklyFee(e.target.value)}
+                              className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-450 font-semibold"
+                            />
                           </div>
                         </div>
 

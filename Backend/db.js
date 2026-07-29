@@ -125,7 +125,8 @@ function getSeedJSONData() {
 }
 
 function syncWeeklyFeeTransactionsJSON(data, periodId) {
-  const weeklyFee = 2000;
+  const period = data.periods.find(p => p.id === periodId) || { weeklyFee: 2000 };
+  const weeklyFee = period.weeklyFee !== undefined ? period.weeklyFee : 2000;
   for (let w = 1; w <= 4; w++) {
     const weekKey = `week${w}`;
     const paidCount = data.payments.filter(p => p.periodId === periodId && p[weekKey] === true).length;
@@ -196,9 +197,16 @@ async function initDB() {
       active TINYINT(1) DEFAULT 0,
       initial_balance INT DEFAULT 0,
       cash_amount INT DEFAULT 0,
-      e_wallet_amount INT DEFAULT 0
+      e_wallet_amount INT DEFAULT 0,
+      weekly_fee INT DEFAULT 2000
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+
+  try {
+    await pool.query('ALTER TABLE periods ADD COLUMN weekly_fee INT DEFAULT 2000');
+  } catch (err) {
+    // Column already exists, ignore
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payments (
@@ -299,7 +307,8 @@ async function seedDB() {
 }
 
 async function syncWeeklyFeeTransactions(periodId) {
-  const weeklyFee = 2000;
+  const [periodRows] = await pool.query('SELECT weekly_fee FROM periods WHERE id = ?', [periodId]);
+  const weeklyFee = periodRows.length > 0 ? (periodRows[0].weekly_fee !== null ? periodRows[0].weekly_fee : 2000) : 2000;
   for (let w = 1; w <= 4; w++) {
     const weekKey = `week${w}`;
     const [countRows] = await pool.query(
@@ -358,7 +367,8 @@ module.exports = {
         active: !!r.active,
         initialBalance: r.initialBalance,
         cashAmount: r.cashAmount,
-        eWalletAmount: r.eWalletAmount
+        eWalletAmount: r.eWalletAmount,
+        weeklyFee: r.weeklyFee !== undefined ? r.weeklyFee : 2000
       }));
     }
     const [rows] = await pool.query('SELECT * FROM periods ORDER BY id');
@@ -368,7 +378,8 @@ module.exports = {
       active: !!r.active,
       initialBalance: r.initial_balance,
       cashAmount: r.cash_amount,
-      eWalletAmount: r.e_wallet_amount
+      eWalletAmount: r.e_wallet_amount,
+      weeklyFee: r.weekly_fee !== null ? r.weekly_fee : 2000
     }));
   },
 
@@ -385,7 +396,7 @@ module.exports = {
     await pool.query('UPDATE periods SET active = 1 WHERE id = ?', [periodId]);
   },
 
-  updatePeriod: async (id, initialBalance, cashAmount, eWalletAmount) => {
+  updatePeriod: async (id, initialBalance, cashAmount, eWalletAmount, weeklyFee) => {
     if (!useMySQL) {
       const data = readJSON();
       const pIdx = data.periods.findIndex(p => p.id === id);
@@ -393,6 +404,7 @@ module.exports = {
         if (initialBalance !== undefined) data.periods[pIdx].initialBalance = Number(initialBalance);
         if (cashAmount !== undefined) data.periods[pIdx].cashAmount = Number(cashAmount);
         if (eWalletAmount !== undefined) data.periods[pIdx].eWalletAmount = Number(eWalletAmount);
+        if (weeklyFee !== undefined) data.periods[pIdx].weeklyFee = Number(weeklyFee);
       }
       writeJSON(data);
       return;
@@ -412,6 +424,10 @@ module.exports = {
       updates.push('e_wallet_amount = ?');
       params.push(Number(eWalletAmount));
     }
+    if (weeklyFee !== undefined) {
+      updates.push('weekly_fee = ?');
+      params.push(Number(weeklyFee));
+    }
     
     if (updates.length === 0) return;
     params.push(id);
@@ -419,10 +435,10 @@ module.exports = {
   },
 
   getStudentPayments: async (periodId) => {
-    const weeklyFee = 2000;
- 
     if (!useMySQL) {
       const data = readJSON();
+      const period = data.periods.find(p => p.id === periodId) || { weeklyFee: 2000 };
+      const weeklyFee = period.weeklyFee !== undefined ? period.weeklyFee : 2000;
       const periodPayments = data.payments.filter(p => p.periodId === periodId);
       
       return data.students.map(s => {
@@ -435,7 +451,7 @@ module.exports = {
         const w4 = pay.week4 ? 1 : 0;
         
         const totalPaid = (w1 + w2 + w3 + w4) * weeklyFee;
-        const debt = 8000 - totalPaid;
+        const debt = (weeklyFee * 4) - totalPaid;
         
         return {
           studentId: s.id,
@@ -449,6 +465,9 @@ module.exports = {
         };
       });
     }
+
+    const [periodRows] = await pool.query('SELECT weekly_fee FROM periods WHERE id = ?', [periodId]);
+    const weeklyFee = periodRows.length > 0 ? (periodRows[0].weekly_fee !== null ? periodRows[0].weekly_fee : 2000) : 2000;
 
     const [rows] = await pool.query(`
       SELECT 
@@ -469,7 +488,7 @@ module.exports = {
       const w3 = r.week3 ? 1 : 0;
       const w4 = r.week4 ? 1 : 0;
       const totalPaid = (w1 + w2 + w3 + w4) * weeklyFee;
-      const debt = 8000 - totalPaid;
+      const debt = (weeklyFee * 4) - totalPaid;
       
       return {
         studentId: r.studentId,
