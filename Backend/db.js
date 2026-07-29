@@ -90,8 +90,7 @@ function getSeedJSONData() {
   });
 
   const periods = [
-    { id: 'juli-2026', name: 'Juli 2026', active: true, initialBalance: 150000, cashAmount: 105000, eWalletAmount: 200000 },
-    { id: 'agustus-2026', name: 'Agustus 2026', active: false, initialBalance: 305000, cashAmount: 0, eWalletAmount: 0 },
+    { id: 'agustus-2026', name: 'Agustus 2026', active: true, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
     { id: 'september-2026', name: 'September 2026', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
     { id: 'oktober-2026', name: 'Oktober 2026', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
     { id: 'november-2026', name: 'November 2026', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
@@ -101,42 +100,32 @@ function getSeedJSONData() {
     { id: 'maret-2027', name: 'Maret 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
     { id: 'april-2027', name: 'April 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
     { id: 'mei-2027', name: 'Mei 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
-    { id: 'juni-2027', name: 'Juni 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 }
+    { id: 'juni-2027', name: 'Juni 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
+    { id: 'juli-2027', name: 'Juli 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 }
   ];
 
   const payments = [];
   periods.forEach(p => {
     students.forEach(s => {
-      const studentIndex = parseInt(s.id.substring(1)) - 1;
-      let week1 = false;
-      let week2 = false;
-      if (p.id === 'juli-2026') {
-        week1 = studentIndex < 30;
-        week2 = studentIndex < 28;
-      }
       payments.push({
         id: `${p.id}-${s.id}`,
         studentId: s.id,
         periodId: p.id,
-        week1,
-        week2,
+        week1: false,
+        week2: false,
         week3: false,
         week4: false
       });
     });
   });
 
-  const transactions = [
-    { id: 'tx-auto-juli-2026-w1', periodId: 'juli-2026', date: '2026-07-07', description: 'Total Iuran Minggu 1 (30 Siswa)', type: 'pemasukan', amount: 150000, isAuto: true, weekIndex: 1 },
-    { id: 'tx-auto-juli-2026-w2', periodId: 'juli-2026', date: '2026-07-14', description: 'Total Iuran Minggu 2 (28 Siswa)', type: 'pemasukan', amount: 140000, isAuto: true, weekIndex: 2 },
-    { id: 'tx-manual-1', periodId: 'juli-2026', date: '2026-07-18', description: 'Beli Kado Ultah Wali Kelas', type: 'pengeluaran', amount: 135000, isAuto: false, weekIndex: null }
-  ];
+  const transactions = [];
 
   return { students, periods, payments, transactions };
 }
 
 function syncWeeklyFeeTransactionsJSON(data, periodId) {
-  const weeklyFee = 5000;
+  const weeklyFee = 2000;
   for (let w = 1; w <= 4; w++) {
     const weekKey = `week${w}`;
     const paidCount = data.payments.filter(p => p.periodId === periodId && p[weekKey] === true).length;
@@ -273,8 +262,7 @@ async function seedDB() {
 
   // Insert periods
   const periods = [
-    ['juli-2026', 'Juli 2026', 1, 150000, 105000, 200000],
-    ['agustus-2026', 'Agustus 2026', 0, 305000, 0, 0],
+    ['agustus-2026', 'Agustus 2026', 1, 0, 0, 0],
     ['september-2026', 'September 2026', 0, 0, 0, 0],
     ['oktober-2026', 'Oktober 2026', 0, 0, 0, 0],
     ['november-2026', 'November 2026', 0, 0, 0, 0],
@@ -284,50 +272,34 @@ async function seedDB() {
     ['maret-2027', 'Maret 2027', 0, 0, 0, 0],
     ['april-2027', 'April 2027', 0, 0, 0, 0],
     ['mei-2027', 'Mei 2027', 0, 0, 0, 0],
-    ['juni-2027', 'Juni 2027', 0, 0, 0, 0]
+    ['juni-2027', 'Juni 2027', 0, 0, 0, 0],
+    ['juli-2027', 'Juli 2027', 0, 0, 0, 0]
   ];
   await pool.query('INSERT INTO periods (id, name, active, initial_balance, cash_amount, e_wallet_amount) VALUES ?', [periods]);
 
-  // Seed payments
+  // Seed payments (all false)
   const paymentValues = [];
   periods.forEach(p => {
     const pId = p[0];
     students.forEach(s => {
       const sId = s[0];
-      const studentIndex = parseInt(sId.substring(1)) - 1;
-      
-      let week1 = 0;
-      let week2 = 0;
-      if (pId === 'juli-2026') {
-        week1 = studentIndex < 30 ? 1 : 0;
-        week2 = studentIndex < 28 ? 1 : 0;
-      }
-      
       paymentValues.push([
         `${pId}-${sId}`,
         sId,
         pId,
-        week1,
-        week2,
+        0,
+        0,
         0,
         0
       ]);
     });
   });
   await pool.query('INSERT INTO payments (id, student_id, period_id, week1, week2, week3, week4) VALUES ?', [paymentValues]);
-
-  // Seed transactions
-  const transactions = [
-    ['tx-auto-juli-2026-w1', 'juli-2026', '2026-07-07', 'Total Iuran Minggu 1 (30 Siswa)', 'pemasukan', 150000, 1, 1],
-    ['tx-auto-juli-2026-w2', 'juli-2026', '2026-07-14', 'Total Iuran Minggu 2 (28 Siswa)', 'pemasukan', 140000, 1, 2],
-    ['tx-manual-1', 'juli-2026', '2026-07-18', 'Beli Kado Ultah Wali Kelas', 'pengeluaran', 135000, 0, null]
-  ];
-  await pool.query('INSERT INTO transactions (id, period_id, date, description, type, amount, is_auto, week_index) VALUES ?', [transactions]);
   console.log("MySQL Seeding complete!");
 }
 
 async function syncWeeklyFeeTransactions(periodId) {
-  const weeklyFee = 5000;
+  const weeklyFee = 2000;
   for (let w = 1; w <= 4; w++) {
     const weekKey = `week${w}`;
     const [countRows] = await pool.query(
@@ -447,8 +419,8 @@ module.exports = {
   },
 
   getStudentPayments: async (periodId) => {
-    const weeklyFee = 5000;
-
+    const weeklyFee = 2000;
+ 
     if (!useMySQL) {
       const data = readJSON();
       const periodPayments = data.payments.filter(p => p.periodId === periodId);
@@ -463,7 +435,7 @@ module.exports = {
         const w4 = pay.week4 ? 1 : 0;
         
         const totalPaid = (w1 + w2 + w3 + w4) * weeklyFee;
-        const debt = 20000 - totalPaid;
+        const debt = 8000 - totalPaid;
         
         return {
           studentId: s.id,
@@ -497,7 +469,7 @@ module.exports = {
       const w3 = r.week3 ? 1 : 0;
       const w4 = r.week4 ? 1 : 0;
       const totalPaid = (w1 + w2 + w3 + w4) * weeklyFee;
-      const debt = 20000 - totalPaid;
+      const debt = 8000 - totalPaid;
       
       return {
         studentId: r.studentId,

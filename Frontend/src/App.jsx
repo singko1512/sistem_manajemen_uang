@@ -3,7 +3,7 @@ import {
   Coins, Plus, Trash2, Calendar, 
   Search, ArrowUpCircle, ArrowDownCircle, 
   RefreshCw, Wallet, FileText, Check, AlertCircle, 
-  Lock, X
+  Lock, LogOut, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,8 +21,7 @@ const INITIAL_STUDENTS = [
 ];
 
 const OFFLINE_PERIODS = [
-  { id: 'juli-2026', name: 'Juli 2026', active: true, initialBalance: 150000, cashAmount: 105000, eWalletAmount: 200000 },
-  { id: 'agustus-2026', name: 'Agustus 2026', active: false, initialBalance: 305000, cashAmount: 0, eWalletAmount: 0 },
+  { id: 'agustus-2026', name: 'Agustus 2026', active: true, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
   { id: 'september-2026', name: 'September 2026', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
   { id: 'oktober-2026', name: 'Oktober 2026', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
   { id: 'november-2026', name: 'November 2026', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
@@ -32,7 +31,8 @@ const OFFLINE_PERIODS = [
   { id: 'maret-2027', name: 'Maret 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
   { id: 'april-2027', name: 'April 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
   { id: 'mei-2027', name: 'Mei 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
-  { id: 'juni-2027', name: 'Juni 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 }
+  { id: 'juni-2027', name: 'Juni 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 },
+  { id: 'juli-2027', name: 'Juli 2027', active: false, initialBalance: 0, cashAmount: 0, eWalletAmount: 0 }
 ];
 
 const getOfflineInitialData = () => {
@@ -44,52 +44,21 @@ const getOfflineInitialData = () => {
   const payments = [];
   OFFLINE_PERIODS.forEach(p => {
     students.forEach(s => {
-      const sIndex = parseInt(s.id.substring(1)) - 1;
       payments.push({
         id: `${p.id}-${s.id}`,
         studentId: s.id,
         periodId: p.id,
-        week1: p.id === 'juli-2026' ? sIndex < 30 : false,
-        week2: p.id === 'juli-2026' ? sIndex < 28 : false,
+        week1: false,
+        week2: false,
         week3: false,
         week4: false
       });
     });
   });
 
-  const transactions = [
-    {
-      id: 'tx-auto-juli-2026-w1',
-      periodId: 'juli-2026',
-      date: '2026-07-07',
-      description: 'Total Iuran Minggu 1 (30 Siswa)',
-      type: 'pemasukan',
-      amount: 150000,
-      isAuto: true,
-      weekIndex: 1
-    },
-    {
-      id: 'tx-auto-juli-2026-w2',
-      periodId: 'juli-2026',
-      date: '2026-07-14',
-      description: 'Total Iuran Minggu 2 (28 Siswa)',
-      type: 'pemasukan',
-      amount: 140000,
-      isAuto: true,
-      weekIndex: 2
-    },
-    {
-      id: 'tx-manual-1',
-      periodId: 'juli-2026',
-      date: '2026-07-18',
-      description: 'Beli Kado Ultah Wali Kelas',
-      type: 'pengeluaran',
-      amount: 135000,
-      isAuto: false
-    }
-  ];
+  const transactions = [];
 
-  return { students, periods: OFFLINE_PERIODS, payments, transactions, weeklyFee: 5000 };
+  return { students, periods: OFFLINE_PERIODS, payments, transactions, weeklyFee: 2000 };
 };
 
 const API_BASE = 'http://localhost:5000/api';
@@ -98,6 +67,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('tagihan'); // 'tagihan' (public), 'cashflow' (public/admin), 'recap' (admin), 'reports' (admin), 'settings' (admin)
   const [isOffline, setIsOffline] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Toast Notification State
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const toastTimeoutRef = useRef(null);
+
+  const showToast = (message, type = 'success') => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast({ show: true, message, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
 
   // Authentication State
   const [isAdmin, setIsAdmin] = useState(false);
@@ -150,18 +133,18 @@ export default function App() {
   function getWeekDate(periodId, weekIndex) {
     try {
       const parts = periodId.split('-');
-      if (parts.length < 2) return '2026-07-07';
+      if (parts.length < 2) return '2026-08-07';
       const monthName = parts[0];
       const yearStr = parts[1];
       const months = {
         januari: '01', februari: '02', maret: '03', april: '04', mei: '05', juni: '06',
         juli: '07', agustus: '08', september: '09', oktober: '10', november: '11', desember: '12'
       };
-      const monthStr = months[monthName.toLowerCase()] || '07';
+      const monthStr = months[monthName.toLowerCase()] || '08';
       const dayStr = String(weekIndex * 7).padStart(2, '0');
       return `${yearStr}-${monthStr}-${dayStr}`;
     } catch {
-      return '2026-07-07';
+      return '2026-08-07';
     }
   }
 
@@ -300,7 +283,7 @@ export default function App() {
           };
           const count = (pay.week1 ? 1 : 0) + (pay.week2 ? 1 : 0) + (pay.week3 ? 1 : 0) + (pay.week4 ? 1 : 0);
           const totalPaid = count * weeklyFee;
-          const debt = 20000 - totalPaid;
+          const debt = 8000 - totalPaid;
           
           return {
             studentId: student.id,
@@ -349,7 +332,7 @@ export default function App() {
   // Toggle Checkbox Action (Only active in Admin Mode)
   const handleTogglePayment = async (studentId, weekIndex) => {
     if (!isAdmin) {
-      alert("Akses ditolak. Silakan login sebagai Bendahara terlebih dahulu! 🔒");
+      showToast("Akses ditolak. Silakan login sebagai Bendahara terlebih dahulu! 🔒", "error");
       return;
     }
 
@@ -364,7 +347,7 @@ export default function App() {
           loadPeriodData(activePeriod.id);
         } else {
           const err = await res.json();
-          alert(`Gagal: ${err.error || "Gagal mengubah status iuran"}`);
+          showToast(`Gagal: ${err.error || "Gagal mengubah status iuran"}`, "error");
         }
       } catch (err) {
         console.error("Backend error during toggle, switching to offline:", err);
@@ -435,7 +418,7 @@ export default function App() {
     e.preventDefault();
     if (!newTx.description || !newTx.amount) return;
     if (!isAdmin) {
-      alert("Akses ditolak. Silakan login sebagai bendahara!");
+      showToast("Akses ditolak. Silakan login sebagai bendahara!", "error");
       return;
     }
 
@@ -463,7 +446,7 @@ export default function App() {
           loadPeriodData(activePeriod.id);
         } else {
           const err = await res.json();
-          alert(`Gagal: ${err.error}`);
+          showToast(`Gagal: ${err.error}`, "error");
         }
       } catch (err) {
         console.error("Backend error, switching offline:", err);
@@ -496,7 +479,7 @@ export default function App() {
   // Delete Transaction
   const handleDeleteTransaction = async (txId) => {
     if (!isAdmin) {
-      alert("Akses ditolak. Anda tidak memiliki otoritas.");
+      showToast("Akses ditolak. Anda tidak memiliki otoritas.", "error");
       return;
     }
 
@@ -510,7 +493,7 @@ export default function App() {
           loadPeriodData(activePeriod.id);
         } else {
           const err = await res.json();
-          alert(`Gagal: ${err.error}`);
+          showToast(`Gagal: ${err.error}`, "error");
         }
       } catch (err) {
         console.error("Backend error, switching offline:", err);
@@ -546,7 +529,7 @@ export default function App() {
           setActivePeriod(nextPeriod);
         } else {
           const err = await res.json();
-          alert(`Gagal: ${err.error}`);
+          showToast(`Gagal: ${err.error}`, "error");
         }
       } catch (err) {
         console.error("Backend error, switching offline:", err);
@@ -570,7 +553,7 @@ export default function App() {
     e.preventDefault();
     if (!activePeriod) return;
     if (!isAdmin) {
-      alert("Akses ditolak. Hanya bendahara yang dapat mengubah saldo!");
+      showToast("Akses ditolak. Hanya bendahara yang dapat mengubah saldo!", "error");
       return;
     }
 
@@ -599,10 +582,10 @@ export default function App() {
           });
           setPeriods(updatedPeriods);
           loadPeriodData(activePeriod.id);
-          alert("Konfigurasi keuangan berhasil disimpan! ✨");
+          showToast("Konfigurasi keuangan berhasil disimpan! ✨", "success");
         } else {
           const err = await res.json();
-          alert(`Gagal: ${err.error}`);
+          showToast(`Gagal: ${err.error}`, "error");
         }
       } catch (err) {
         console.error("Backend error, switching offline:", err);
@@ -621,7 +604,7 @@ export default function App() {
       setPeriods(updatedDB.periods);
       setTimeout(() => {
         loadPeriodData(activePeriod.id);
-        alert("Konfigurasi keuangan offline berhasil disimpan! ✨");
+        showToast("Konfigurasi keuangan offline berhasil disimpan! ✨", "success");
       }, 0);
     }
   };
@@ -641,14 +624,14 @@ export default function App() {
           setPeriods(resData.db.periods);
           const active = resData.db.periods.find(p => p.active) || resData.db.periods[0];
           setActivePeriod(active);
-          alert("Data berhasil disetel ulang! 💫");
+          showToast("Data berhasil disetel ulang! 💫", "success");
         } else {
           const err = await res.json();
-          alert(`Gagal: ${err.error}`);
+          showToast(`Gagal: ${err.error}`, "error");
         }
       } catch (err) {
         console.error("Backend error during reset:", err);
-        alert("Gagal menghubungi server backend. Setel ulang offline diaktifkan.");
+        showToast("Gagal menghubungi server backend. Setel ulang offline diaktifkan.", "error");
         setIsOffline(true);
       }
     } else {
@@ -658,7 +641,7 @@ export default function App() {
       setPeriods(offline.periods);
       const active = offline.periods.find(p => p.active) || offline.periods[0];
       setActivePeriod(active);
-      alert("Data offline berhasil disetel ulang! 💫");
+      showToast("Data offline berhasil disetel ulang! 💫", "success");
     }
   };
 
@@ -675,7 +658,7 @@ export default function App() {
         setShowLoginModal(false);
         setLoginUsername('');
         setLoginPassword('');
-        alert("Login berhasil (Mode Offline)! Selamat bekerja, Bendahara 🌸");
+        showToast("Login berhasil (Mode Offline)! Selamat bekerja, Bendahara 🌸", "success");
       } else {
         setLoginError('Username atau password salah.');
       }
@@ -697,7 +680,7 @@ export default function App() {
         setShowLoginModal(false);
         setLoginUsername('');
         setLoginPassword('');
-        alert("Login Berhasil! Sesi bendahara aktif. 🌸");
+        showToast("Login Berhasil! Sesi bendahara aktif. 🌸", "success");
       } else {
         setLoginError(data.error || "Gagal melakukan autentikasi");
       }
@@ -713,7 +696,254 @@ export default function App() {
     setAuthToken(null);
     localStorage.removeItem('adminToken');
     setActiveTab('tagihan');
-    alert("Berhasil keluar dari sesi bendahara. Kembali ke mode siswa (read-only). 🌸");
+    showToast("Berhasil keluar dari sesi bendahara. Kembali ke mode siswa (read-only). 🌸", "success");
+  };
+
+  // Export functions
+  const exportMonthlyTransactionsXlsx = () => {
+    let html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"/><style>body { font-family: sans-serif; } table { border-collapse: collapse; } th, td { border: 1px solid #E2E8F0; padding: 8px; text-align: left; } th { background-color: #F8FAFC; font-weight: bold; }</style></head>
+      <body>
+        <h2>Laporan Transaksi Kas Kelas - Periode ${activePeriod?.name}</h2>
+        <p>Saldo Awal Bulan: Rp ${summary.initialBalance.toLocaleString('id-ID')}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Keterangan</th>
+              <th>Pemasukan (Rp)</th>
+              <th>Pengeluaran (Rp)</th>
+              <th>Saldo Akhir (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-</td>
+              <td>Saldo Awal Bulan</td>
+              <td>-</td>
+              <td>-</td>
+              <td>${summary.initialBalance}</td>
+            </tr>
+            ${transactions.map(tx => `
+              <tr>
+                <td>${tx.date.split('-').reverse().join('/')}</td>
+                <td>${tx.description}</td>
+                <td>${tx.type === 'pemasukan' ? tx.amount : '-'}</td>
+                <td>${tx.type === 'pengeluaran' ? tx.amount : '-'}</td>
+                <td>${tx.balance}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Transaksi_Kas_${activePeriod?.id}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Berhasil mengekspor transaksi bulanan ke Excel! 📊", "success");
+  };
+
+  const exportMonthlyTransactionsPdf = () => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    let html = `
+      <html>
+      <head>
+        <title>Transaksi Kas Kelas - ${activePeriod?.name}</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1F2937; padding: 40px; }
+          h2 { color: #1F2937; font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+          .subtitle { color: #6B7280; font-size: 12px; margin-bottom: 25px; }
+          .summary { background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; }
+          .summary-item { font-size: 12px; font-weight: bold; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+          th, td { border-bottom: 1px solid #E5E7EB; padding: 10px 8px; text-align: left; }
+          th { background-color: #F3F4F6; color: #4B5563; font-weight: bold; }
+          .amount-in { color: #059669; font-weight: bold; }
+          .amount-out { color: #DC2626; font-weight: bold; }
+          .footer { margin-top: 50px; font-size: 10px; color: #9CA3AF; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <h2>KasTwelvenine - Transaksi Kas Kelas</h2>
+        <div class="subtitle">Laporan Transaksi Periode: ${activePeriod?.name}</div>
+        
+        <div class="summary">
+          <div class="summary-item">Saldo Awal: Rp ${summary.initialBalance.toLocaleString('id-ID')}</div>
+          <div class="summary-item" style="color: #059669;">Pemasukan: +Rp ${summary.totalPemasukan.toLocaleString('id-ID')}</div>
+          <div class="summary-item" style="color: #DC2626;">Pengeluaran: -Rp ${summary.totalPengeluaran.toLocaleString('id-ID')}</div>
+          <div class="summary-item">Saldo Akhir: Rp ${summary.endingBalance.toLocaleString('id-ID')}</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Keterangan</th>
+              <th style="text-align: right;">Pemasukan</th>
+              <th style="text-align: right;">Pengeluaran</th>
+              <th style="text-align: right;">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-</td>
+              <td>Saldo Awal Bulan</td>
+              <td style="text-align: right;">-</td>
+              <td style="text-align: right;">-</td>
+              <td style="text-align: right; font-weight: bold;">Rp ${summary.initialBalance.toLocaleString('id-ID')}</td>
+            </tr>
+            ${transactions.map(tx => `
+              <tr>
+                <td>${tx.date.split('-').reverse().join('/')}</td>
+                <td>${tx.description}</td>
+                <td style="text-align: right;" class="${tx.type === 'pemasukan' ? 'amount-in' : ''}">
+                  ${tx.type === 'pemasukan' ? `Rp ${tx.amount.toLocaleString('id-ID')}` : '-'}
+                </td>
+                <td style="text-align: right;" class="${tx.type === 'pengeluaran' ? 'amount-out' : ''}">
+                  ${tx.type === 'pengeluaran' ? `Rp ${tx.amount.toLocaleString('id-ID')}` : '-'}
+                </td>
+                <td style="text-align: right; font-weight: bold;">Rp ${tx.balance.toLocaleString('id-ID')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">Dicetak pada ${new Date().toLocaleDateString('id-ID')} • KasTwelvenine Official</div>
+        
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    showToast("Membuka dialog cetak PDF... 📄", "success");
+  };
+
+  const exportAnnualReportXlsx = () => {
+    let html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"/><style>body { font-family: sans-serif; } table { border-collapse: collapse; } th, td { border: 1px solid #E2E8F0; padding: 8px; text-align: left; } th { background-color: #F8FAFC; font-weight: bold; }</style></head>
+      <body>
+        <h2>Laporan Kas Kelas Tahunan (Tahun Ajaran)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Periode</th>
+              <th>Saldo Awal (Rp)</th>
+              <th>Pemasukan (Rp)</th>
+              <th>Pengeluaran (Rp)</th>
+              <th>Saldo Akhir (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${periods.map(p => {
+              const isActive = p.id === activePeriod?.id;
+              const saldoAwal = p.id === activePeriod?.id ? summary.initialBalance : p.initialBalance;
+              const pemasukan = p.id === activePeriod?.id ? summary.totalPemasukan : 0;
+              const pengeluaran = p.id === activePeriod?.id ? summary.totalPengeluaran : 0;
+              const saldoAkhir = p.id === activePeriod?.id ? summary.endingBalance : p.initialBalance;
+              return `
+                <tr>
+                  <td>${p.name} ${isActive ? '(Aktif)' : ''}</td>
+                  <td>${saldoAwal}</td>
+                  <td>${pemasukan}</td>
+                  <td>${pengeluaran}</td>
+                  <td>${saldoAkhir}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_Kas_Tahunan.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Berhasil mengekspor rekap laporan tahunan ke Excel! 📊", "success");
+  };
+
+  const exportAnnualReportPdf = () => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    let html = `
+      <html>
+      <head>
+        <title>Laporan Kas Kelas Tahunan</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1F2937; padding: 40px; }
+          h2 { color: #1F2937; font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+          .subtitle { color: #6B7280; font-size: 12px; margin-bottom: 25px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+          th, td { border-bottom: 1px solid #E5E7EB; padding: 10px 8px; text-align: left; }
+          th { background-color: #F3F4F6; color: #4B5563; font-weight: bold; }
+          .amount-in { color: #059669; font-weight: bold; }
+          .amount-out { color: #DC2626; font-weight: bold; }
+          .footer { margin-top: 50px; font-size: 10px; color: #9CA3AF; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <h2>KasTwelvenine - Laporan Kas Kelas Tahunan</h2>
+        <div class="subtitle">Tahun Ajaran 2026/2027</div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Periode</th>
+              <th style="text-align: right;">Saldo Awal</th>
+              <th style="text-align: right;">Pemasukan</th>
+              <th style="text-align: right;">Pengeluaran</th>
+              <th style="text-align: right;">Saldo Akhir</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${periods.map(p => {
+              const isActive = p.id === activePeriod?.id;
+              const saldoAwal = p.id === activePeriod?.id ? summary.initialBalance : p.initialBalance;
+              const pemasukan = p.id === activePeriod?.id ? summary.totalPemasukan : 0;
+              const pengeluaran = p.id === activePeriod?.id ? summary.totalPengeluaran : 0;
+              const saldoAkhir = p.id === activePeriod?.id ? summary.endingBalance : p.initialBalance;
+              return `
+                <tr>
+                  <td style="font-weight: bold;">${p.name} ${isActive ? '(Aktif)' : ''}</td>
+                  <td style="text-align: right;">Rp ${saldoAwal.toLocaleString('id-ID')}</td>
+                  <td style="text-align: right;" class="amount-in">Rp ${pemasukan.toLocaleString('id-ID')}</td>
+                  <td style="text-align: right;" class="amount-out">Rp ${pengeluaran.toLocaleString('id-ID')}</td>
+                  <td style="text-align: right; font-weight: bold;">Rp ${saldoAkhir.toLocaleString('id-ID')}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">Dicetak pada ${new Date().toLocaleDateString('id-ID')} • KasTwelvenine Official</div>
+        
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    showToast("Membuka dialog cetak PDF... 📄", "success");
   };
 
   // Filter students based on search query in the admin grid
@@ -749,7 +979,7 @@ export default function App() {
                   <path d="M12.003 21c-.482 0-.825-.37-.872-.857l-.36-3.791c-.046-.484-.45-.852-.936-.852H6.046c-.484 0-.89-.368-.936-.852l-.36-3.791c-.047-.487.29-.857.772-.857h3.789c.486 0 .89-.368.936-.852l.36-3.791C10.66 5.522 11.066 5.15 11.55 5.15c.484 0 .89.368.936.852l.36 3.791c.046.484.45.852.936.852h3.789c.484 0 .89.368.936.852l.36 3.791c.047.487-.29.857-.772.857h-3.789c-.486 0-.89.368-.936.852l-.36 3.791c-.047.487-.39.857-.872.857zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
                 </svg>
               </div>
-              <span className="text-sm font-bold text-slate-800 tracking-tight">TangledTreasury</span>
+              <span className="text-sm font-bold text-slate-800 tracking-tight">KasTwelvenine</span>
             </div>
 
             {/* Login / Logout Capsule Button */}
@@ -759,19 +989,20 @@ export default function App() {
                   setLoginError('');
                   setShowLoginModal(true);
                 }}
-                className="px-4 py-1.5 rounded-full border border-pink-300 text-pink-500 hover:bg-pink-50 text-[11px] font-bold transition-all"
+                className="px-3 sm:px-4 py-1.5 rounded-full border border-pink-300 text-pink-500 hover:bg-pink-50 text-[11px] font-bold transition-all flex items-center gap-1"
               >
-                Login Bendahara 🔑
+                <span className="hidden sm:inline">Login Bendahara 🔑</span>
+                <span className="sm:hidden">Login 🔑</span>
               </button>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-3">
                 {/* Period Selector (Only shown for Admin) */}
-                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded-xl px-2.5 py-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
                   <select
                     value={activePeriod?.id || ''}
                     onChange={(e) => handlePeriodChange(e.target.value)}
-                    className="text-xs font-semibold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                    className="text-[10px] sm:text-xs font-semibold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer max-w-[85px] sm:max-w-none"
                   >
                     {periods.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
@@ -779,14 +1010,15 @@ export default function App() {
                   </select>
                 </div>
 
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded hidden md:inline">
                   Admin 👑
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 text-[11px] font-bold transition-all"
+                  className="px-3 sm:px-4 py-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 text-[11px] font-bold transition-all flex items-center gap-1"
                 >
-                  Logout 🚪
+                  <span className="hidden sm:inline">Logout 🚪</span>
+                  <span className="sm:hidden flex items-center justify-center"><LogOut className="w-3.5 h-3.5" /></span>
                 </button>
               </div>
             )}
@@ -1029,10 +1261,7 @@ export default function App() {
                       )}
                     </AnimatePresence>
 
-                    {/* Centered Footer Description */}
-                    <p className="text-[10px] text-slate-400/80 font-medium text-center mt-6">
-                      TangledTreasury · Kas kelas yang rapi, terbuka, dan menyenangkan.
-                    </p>
+
                   </div>
                 )}
 
@@ -1090,13 +1319,29 @@ export default function App() {
 
                     {/* Read-Only Transaction Table */}
                     <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-                      <h3 className="text-xs font-bold text-slate-800 mb-3 flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-slate-400" />
-                        Laporan Pemasukan & Pengeluaran ({activePeriod?.name})
-                      </h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <FileText className="w-4 h-4 text-slate-400" />
+                          Laporan Pemasukan & Pengeluaran ({activePeriod?.name})
+                        </h3>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={exportMonthlyTransactionsXlsx}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                          >
+                            <span>Excel 📊</span>
+                          </button>
+                          <button
+                            onClick={exportMonthlyTransactionsPdf}
+                            className="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                          >
+                            <span>PDF 📄</span>
+                          </button>
+                        </div>
+                      </div>
 
                       <div className="overflow-x-auto border border-slate-100 rounded-xl custom-scrollbar">
-                        <table className="w-full text-left border-collapse text-xs">
+                        <table className="w-full text-left border-collapse text-xs min-w-[600px]">
                           <thead>
                             <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
                               <th className="py-2.5 px-3 w-28">Tanggal</th>
@@ -1109,7 +1354,7 @@ export default function App() {
                           <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                             <tr className="bg-slate-50/20 italic text-slate-500">
                               <td className="py-2 px-3">
-                                {getWeekDate(activePeriod?.id || 'juli-2026', 0).split('-').reverse().join('/')}
+                                {getWeekDate(activePeriod?.id || 'agustus-2026', 0).split('-').reverse().join('/')}
                               </td>
                               <td className="py-2 px-3">Saldo Awal Bulan</td>
                               <td className="py-2 px-3 text-right">-</td>
@@ -1210,7 +1455,7 @@ export default function App() {
                     </div>
 
                     <div className="overflow-x-auto border border-slate-150 rounded-xl custom-scrollbar">
-                      <table className="w-full text-left border-collapse text-xs">
+                      <table className="w-full text-left border-collapse text-xs min-w-[650px]">
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                             <th className="py-2 px-3 text-center w-12">No</th>
@@ -1291,13 +1536,29 @@ export default function App() {
                 {activeTab === 'cashflow' && isAdmin && (
                   <div className="space-y-6">
                     <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-                      <h3 className="text-xs font-bold text-slate-850 mb-3 flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-slate-400" />
-                        Kelola Arus Kas
-                      </h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <h3 className="text-xs font-bold text-slate-850 flex items-center gap-1.5">
+                          <FileText className="w-4 h-4 text-slate-400" />
+                          Kelola Arus Kas ({activePeriod?.name})
+                        </h3>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={exportMonthlyTransactionsXlsx}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                          >
+                            <span>Excel 📊</span>
+                          </button>
+                          <button
+                            onClick={exportMonthlyTransactionsPdf}
+                            className="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                          >
+                            <span>PDF 📄</span>
+                          </button>
+                        </div>
+                      </div>
 
                       <div className="overflow-x-auto border border-slate-100 rounded-xl custom-scrollbar">
-                        <table className="w-full text-left border-collapse text-xs">
+                        <table className="w-full text-left border-collapse text-xs min-w-[600px]">
                           <thead>
                             <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                               <th className="py-2.5 px-3 w-28">Tanggal</th>
@@ -1311,7 +1572,7 @@ export default function App() {
                           <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                             <tr className="bg-slate-50/20 italic text-slate-500">
                               <td className="py-2 px-3 text-slate-400">
-                                {getWeekDate(activePeriod?.id || 'juli-2026', 0).split('-').reverse().join('/')}
+                                {getWeekDate(activePeriod?.id || 'agustus-2026', 0).split('-').reverse().join('/')}
                               </td>
                               <td className="py-2 px-3">Saldo Awal Bulan</td>
                               <td className="py-2 px-3 text-right">-</td>
@@ -1444,32 +1705,60 @@ export default function App() {
                 {/* ---------------------------------------------------- */}
                 {activeTab === 'reports' && isAdmin && (
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-5">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-50 text-slate-700 rounded-xl">
-                        <FileText className="w-5 h-5" />
+                    <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-50 text-slate-700 rounded-xl">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-bold text-slate-800">Laporan Kas Tahunan (2 Semester)</h3>
+                          <p className="text-[9px] text-slate-400 font-medium">Rekapitulasi kas bulanan per tahun ajaran</p>
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Export Actions Panel (Excel & PDF Buttons) */}
+                    <div className="border border-slate-100 bg-slate-50/20 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
-                        <h3 className="text-xs font-bold text-slate-800">Laporan Kas Tahunan (2 Semester)</h3>
-                        <p className="text-[9px] text-slate-400 font-medium">Rekapitulasi kas bulanan per tahun ajaran</p>
+                        <h4 className="font-bold text-xs text-slate-800 mb-1">
+                          Export Rekap Laporan
+                        </h4>
+                        <p className="text-[9.5px] text-slate-450 font-medium">
+                          Unduh ringkasan saldo awal, pemasukan, pengeluaran & akhir semua periode bulan.
+                        </p>
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={exportAnnualReportXlsx}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-4 py-1.5 rounded-lg transition-all flex items-center gap-1 justify-center flex-1 sm:flex-initial"
+                        >
+                          <span>Excel 📊</span>
+                        </button>
+                        <button
+                          onClick={exportAnnualReportPdf}
+                          className="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold px-4 py-1.5 rounded-lg transition-all flex items-center gap-1 justify-center flex-1 sm:flex-initial"
+                        >
+                          <span>PDF 📄</span>
+                        </button>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50">
                         <h4 className="font-bold text-xs text-slate-800 mb-1">
-                          Semester Ganjil (Juli - Desember)
+                          Semester Ganjil (Agustus - Desember)
                         </h4>
                         <div className="space-y-1 text-xs text-slate-600 font-semibold mt-2.5">
                           <div className="flex justify-between">
                             <span className="text-slate-400">Pemasukan:</span>
                             <span>
-                              Rp {periods.slice(0,6).reduce((sum, p) => sum + (p.id === 'juli-2026' ? summary.totalPemasukan : 0), 0).toLocaleString('id-ID')}
+                              Rp {periods.slice(0,6).reduce((sum, p) => sum + (p.id === 'agustus-2026' ? summary.totalPemasukan : 0), 0).toLocaleString('id-ID')}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-400">Pengeluaran:</span>
                             <span>
-                              Rp {periods.slice(0,6).reduce((sum, p) => sum + (p.id === 'juli-2026' ? summary.totalPengeluaran : 0), 0).toLocaleString('id-ID')}
+                              Rp {periods.slice(0,6).reduce((sum, p) => sum + (p.id === 'agustus-2026' ? summary.totalPengeluaran : 0), 0).toLocaleString('id-ID')}
                             </span>
                           </div>
                         </div>
@@ -1477,7 +1766,7 @@ export default function App() {
 
                       <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50">
                         <h4 className="font-bold text-xs text-slate-800 mb-1">
-                          Semester Genap (Januari - Juni)
+                          Semester Genap (Januari - Juli)
                         </h4>
                         <div className="space-y-1 text-xs text-slate-600 font-semibold mt-2.5">
                           <div className="flex justify-between">
@@ -1486,14 +1775,14 @@ export default function App() {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-400">Pengeluaran:</span>
-                            <span className="text-slate-400">Rp 0</span>
+                            <span className="text-slate-450">Rp 0</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="overflow-x-auto border border-slate-100 rounded-xl custom-scrollbar">
-                      <table className="w-full text-left border-collapse text-xs">
+                      <table className="w-full text-left border-collapse text-xs min-w-[600px]">
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-150">
                             <th className="py-2.5 px-3">Periode</th>
@@ -1507,11 +1796,11 @@ export default function App() {
                         <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                           {periods.map(p => {
                             const isActive = p.id === activePeriod?.id;
-                            const isJuly = p.id === 'juli-2026';
-                            const saldoAwal = isJuly ? summary.initialBalance : p.initialBalance;
-                            const pemasukan = isJuly ? summary.totalPemasukan : 0;
-                            const pengeluaran = isJuly ? summary.totalPengeluaran : 0;
-                            const saldoAkhir = isJuly ? summary.endingBalance : p.initialBalance;
+                            const isAugust = p.id === 'agustus-2026';
+                            const saldoAwal = isAugust ? summary.initialBalance : p.initialBalance;
+                            const pemasukan = isAugust ? summary.totalPemasukan : 0;
+                            const pengeluaran = isAugust ? summary.totalPengeluaran : 0;
+                            const saldoAkhir = isAugust ? summary.endingBalance : p.initialBalance;
 
                             return (
                               <tr key={p.id} className="hover:bg-slate-50/50">
@@ -1697,7 +1986,7 @@ export default function App() {
                 
                 <div className="border-t border-dotted border-slate-200 pt-2 w-44">
                   <p className="font-bold text-xs text-slate-850 flex items-center justify-center md:justify-end gap-1">
-                    {activePeriod?.id === 'juli-2026' ? 'Siti Hardianti F. K.' : 'Bendahara Iuran'}
+                    {activePeriod?.id === 'agustus-2026' ? 'Siti Hardianti F. K.' : 'Bendahara Iuran'}
                     {/* Circle check verified icon next to name */}
                     <span className="text-emerald-500 bg-emerald-50 rounded-full p-0.5">
                       <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
@@ -1705,7 +1994,7 @@ export default function App() {
                       </svg>
                     </span>
                   </p>
-                  <p className="text-[8.5px] text-slate-400 font-semibold mt-0.5">TangledTreasury Official</p>
+                  <p className="text-[8.5px] text-slate-400 font-semibold mt-0.5">KasTwelvenine Official</p>
                 </div>
               </div>
             </div>
@@ -1790,6 +2079,75 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Toast Notification Center Modal */}
+      <AnimatePresence>
+        {toast.show && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-slate-900/10 backdrop-blur-[2px]">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl max-w-xs w-full text-center flex flex-col items-center gap-4"
+            >
+              {toast.type === 'success' ? (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: 'spring', damping: 10 }}
+                  className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner"
+                >
+                  <svg className="w-7 h-7 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <motion.path 
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      d="M5 13l4 4L19 7" 
+                    />
+                  </svg>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: 'spring', damping: 10 }}
+                  className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center shadow-inner"
+                >
+                  <svg className="w-7 h-7 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <motion.path 
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      d="M6 18L18 6M6 6l12 12" 
+                    />
+                  </svg>
+                </motion.div>
+              )}
+              
+              <div className="space-y-1">
+                <h4 className="text-xs font-extrabold text-slate-800">
+                  {toast.type === 'success' ? 'Berhasil! ✨' : 'Perhatian ⚠️'}
+                </h4>
+                <p className="text-[10px] font-semibold text-slate-400 leading-relaxed">
+                  {toast.message}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-100 bg-white py-4 mt-8">
+        <div className="max-w-5xl mx-auto px-4 text-center text-[10px] font-semibold text-slate-400">
+          © {new Date().getFullYear()} KasTwelvenine · Transparansi Kas Kelas yang Terbuka & Rapi.
+        </div>
+      </footer>
 
     </div>
   );
