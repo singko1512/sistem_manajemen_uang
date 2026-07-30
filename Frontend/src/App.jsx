@@ -996,149 +996,150 @@ export default function App() {
       {/* Top Navigation Block */}
       <div className="border-b border-slate-100 bg-white">
         <div className="max-w-5xl mx-auto px-4">
-          <header className="flex justify-between items-center py-4">
+          <header className="flex justify-between items-center py-3 sm:py-4 gap-3">
             {/* Sakura Brand Logo */}
             <div 
               className="flex items-center gap-2 cursor-pointer select-none" 
               onClick={() => setActiveTab(isAdmin ? 'recap' : 'tagihan')}
             >
               {/* Sakura blossom circular icon (matches screenshot) */}
-              <div className="w-8 h-8 rounded-full bg-pink-100/50 flex items-center justify-center border border-pink-200/30">
-                <svg className="w-4 h-4 text-pink-500 fill-current" viewBox="0 0 24 24">
-                  <path d="M12.003 21c-.482 0-.825-.37-.872-.857l-.36-3.791c-.046-.484-.45-.852-.936-.852H6.046c-.484 0-.89-.368-.936-.852l-.36-3.791c-.047-.487.29-.857.772-.857h3.789c.486 0 .89-.368.936-.852l.36-3.791C10.66 5.522 11.066 5.15 11.55 5.15c.484 0 .89.368.936.852l.36 3.791c.046.484.45.852.936.852h3.789c.484 0 .89.368.936.852l.36 3.791c.047.487-.29.857-.772.857h-3.789c-.486 0-.89.368-.936.852l-.36 3.791c-.047.487-.39.857-.872.857zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
-                </svg>
+              <div className="w-8 h-8 rounded-full bg-pink-100/50 flex items-center justify-center border border-pink-200/30 text-base animate-pulse">
+                🌸
               </div>
               <span className="text-sm font-bold text-slate-800 tracking-tight">KasTwelvenine</span>
             </div>
 
-            {/* Login / Logout Capsule Button */}
-            {!isAdmin ? (
-              <button
-                onClick={() => {
-                  setLoginError('');
-                  setShowLoginModal(true);
-                }}
-                className="px-3 sm:px-4 py-1.5 rounded-full border border-pink-300 text-pink-500 hover:bg-pink-50 text-[11px] font-bold transition-all flex items-center gap-1"
-              >
-                <span className="hidden sm:inline">Login Bendahara 🔑</span>
-                <span className="sm:hidden">Login 🔑</span>
-              </button>
-            ) : (
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                {/* Month Selector */}
-                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
-                  <select
-                    value={activeMonth}
-                    onChange={(e) => handleMonthYearChange(e.target.value, activeYear)}
-                    className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
-                  >
-                    {['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'].map(m => {
-                      const displayMonth = m.charAt(0).toUpperCase() + m.slice(1);
-                      const exists = periods.some(p => p.id.startsWith(`${m}-`));
-                      if (!exists) return null;
-                      return <option key={m} value={m}>{displayMonth}</option>;
-                    })}
-                  </select>
-                </div>
-
-                {/* Year Selector */}
-                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
-                  <select
-                    value={activeYear}
-                    onChange={(e) => handleMonthYearChange(activeMonth, e.target.value)}
-                    className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
-                  >
-                    {availableYears.map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded hidden md:inline">
-                  Admin 👑
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 sm:px-4 py-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 text-[11px] font-bold transition-all flex items-center gap-1"
-                >
-                  <span className="hidden sm:inline">Logout 🚪</span>
-                  <span className="sm:hidden flex items-center justify-center"><LogOut className="w-3.5 h-3.5" /></span>
-                </button>
+            {/* Navigation and Actions */}
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              {/* View Switcher Bubble Tabs (moved to header) */}
+              <div className="flex gap-0.5 bg-slate-50 border border-slate-200/50 p-1 rounded-full">
+                {!isAdmin ? (
+                  <>
+                    <button
+                      onClick={() => setActiveTab('tagihan')}
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
+                        activeTab === 'tagihan'
+                          ? 'bg-white text-pink-500 shadow-sm border border-slate-100'
+                          : 'text-slate-450 hover:text-slate-650'
+                      }`}
+                    >
+                      Cek Tagihan
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('cashflow')}
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
+                        activeTab === 'cashflow'
+                          ? 'bg-white text-pink-500 shadow-sm border border-slate-100'
+                          : 'text-slate-450 hover:text-slate-650'
+                      }`}
+                    >
+                      Transparansi Kas
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setActiveTab('recap')}
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
+                        activeTab === 'recap'
+                          ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
+                          : 'text-slate-450 hover:text-slate-650'
+                      }`}
+                    >
+                      Rekap
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('cashflow')}
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
+                        activeTab === 'cashflow'
+                          ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
+                          : 'text-slate-450 hover:text-slate-650'
+                      }`}
+                    >
+                      Transaksi
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('reports')}
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
+                        activeTab === 'reports'
+                          ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
+                          : 'text-slate-450 hover:text-slate-650'
+                      }`}
+                    >
+                      Laporan
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('settings')}
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
+                        activeTab === 'settings'
+                          ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
+                          : 'text-slate-450 hover:text-slate-650'
+                      }`}
+                    >
+                      Pengaturan
+                    </button>
+                  </>
+                )}
               </div>
-            )}
-          </header>
 
-          {/* View Switcher Bubble Tabs (matches screenshot) */}
-          <div className="flex gap-2 pb-3">
-            {!isAdmin ? (
-              <>
+              {/* Login / Logout / Month Selector Actions */}
+              {!isAdmin ? (
                 <button
-                  onClick={() => setActiveTab('tagihan')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === 'tagihan'
-                      ? 'bg-pink-100/50 text-[#EC4899]'
-                      : 'text-slate-400 hover:text-slate-650'
-                  }`}
+                  onClick={() => {
+                    setLoginError('');
+                    setShowLoginModal(true);
+                  }}
+                  className="w-8 h-8 rounded-full bg-pink-50 hover:bg-pink-100/70 border border-pink-200/50 hover:border-pink-300 text-pink-500 hover:text-pink-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md"
+                  title="Login Bendahara"
                 >
-                  Cek Tagihan
+                  <Lock className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  onClick={() => setActiveTab('cashflow')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === 'cashflow'
-                      ? 'bg-pink-100/50 text-[#EC4899]'
-                      : 'text-slate-400 hover:text-slate-650'
-                  }`}
-                >
-                  Transparansi Kas
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setActiveTab('recap')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === 'recap'
-                      ? 'bg-pink-100/50 text-[#EC4899]'
-                      : 'text-slate-400 hover:text-slate-650'
-                  }`}
-                >
-                  Rekap Pembayaran
-                </button>
-                <button
-                  onClick={() => setActiveTab('cashflow')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === 'cashflow'
-                      ? 'bg-pink-100/50 text-[#EC4899]'
-                      : 'text-slate-400 hover:text-slate-650'
-                  }`}
-                >
-                  Transaksi Kas
-                </button>
-                <button
-                  onClick={() => setActiveTab('reports')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === 'reports'
-                      ? 'bg-pink-100/50 text-[#EC4899]'
-                      : 'text-slate-400 hover:text-slate-650'
-                  }`}
-                >
-                  Laporan
-                </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    activeTab === 'settings'
-                      ? 'bg-pink-100/50 text-[#EC4899]'
-                      : 'text-slate-400 hover:text-slate-650'
-                  }`}
-                >
-                  Pengaturan
-                </button>
-              </>
-            )}
-          </div>
+              ) : (
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Month Selector */}
+                  <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
+                    <select
+                      value={activeMonth}
+                      onChange={(e) => handleMonthYearChange(e.target.value, activeYear)}
+                      className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                    >
+                      {['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'].map(m => {
+                        const displayMonth = m.charAt(0).toUpperCase() + m.slice(1);
+                        const exists = periods.some(p => p.id.startsWith(`${m}-`));
+                        if (!exists) return null;
+                        return <option key={m} value={m}>{displayMonth}</option>;
+                      })}
+                    </select>
+                  </div>
+
+                  {/* Year Selector */}
+                  <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
+                    <select
+                      value={activeYear}
+                      onChange={(e) => handleMonthYearChange(activeMonth, e.target.value)}
+                      className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                    >
+                      {availableYears.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded hidden md:inline">
+                    Admin 👑
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="px-3 sm:px-4 py-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 text-[11px] font-bold transition-all flex items-center gap-1"
+                  >
+                    <span className="hidden sm:inline">Logout 🚪</span>
+                    <span className="sm:hidden flex items-center justify-center"><LogOut className="w-3.5 h-3.5" /></span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </header>
         </div>
       </div>
 
@@ -1257,9 +1258,14 @@ export default function App() {
                         >
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <span className="text-[8px] font-extrabold uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded">
-                                Absen {parseInt(selectedStudent.studentId.substring(1))}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[8px] font-extrabold uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded">
+                                  Absen {parseInt(selectedStudent.studentId.substring(1))}
+                                </span>
+                                <span className="text-[8px] font-extrabold uppercase px-2 py-0.5 bg-pink-50 text-pink-650 rounded border border-pink-100/30">
+                                  {activePeriod?.name}
+                                </span>
+                              </div>
                               <h3 className="text-sm font-extrabold text-slate-800 mt-1.5">{selectedStudent.name}</h3>
                             </div>
                             <div>
