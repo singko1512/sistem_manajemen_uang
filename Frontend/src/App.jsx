@@ -996,28 +996,85 @@ export default function App() {
       {/* Top Navigation Block */}
       <div className="border-b border-slate-100 bg-white">
         <div className="max-w-5xl mx-auto px-4">
-          <header className="flex justify-between items-center py-3 sm:py-4 gap-3">
-            {/* Sakura Brand Logo */}
-            <div
-              className="flex items-center gap-2 cursor-pointer select-none"
-              onClick={() => setActiveTab(isAdmin ? 'recap' : 'tagihan')}
-            >
-              {/* Sakura blossom circular icon (matches screenshot) */}
-              <div className="w-8 h-8 rounded-full bg-pink-100/50 flex items-center justify-center border border-pink-200/30 text-base animate-pulse">
-                🌸
+          <header className="flex flex-col md:flex-row md:items-center justify-between py-3 md:py-4 gap-3">
+            {/* Top Row on Mobile: Logo & Actions */}
+            <div className="flex items-center justify-between w-full md:w-auto">
+              {/* Sakura Brand Logo */}
+              <div
+                className="flex items-center gap-2 cursor-pointer select-none"
+                onClick={() => setActiveTab(isAdmin ? 'recap' : 'tagihan')}
+              >
+                {/* Sakura blossom circular icon */}
+                <div className="w-8 h-8 rounded-full bg-pink-100/50 flex items-center justify-center border border-pink-200/30 text-base">
+                  🌸
+                </div>
+                <span className="text-sm font-bold text-slate-800 tracking-tight">KasTwelvenine</span>
               </div>
-              <span className="text-sm font-bold text-slate-800 tracking-tight">KasTwelvenine</span>
+
+              {/* Mobile Actions (Selectors/Logout/Login) - Visible only on Mobile */}
+              <div className="flex md:hidden items-center gap-1.5">
+                {isAdmin ? (
+                  <div className="flex items-center gap-1.5">
+                    {/* Month Selector */}
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl px-2 py-1">
+                      <select
+                        value={activeMonth}
+                        onChange={(e) => handleMonthYearChange(e.target.value, activeYear)}
+                        className="text-[10px] font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                      >
+                        {['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'].map(m => {
+                          const displayMonth = m.charAt(0).toUpperCase() + m.slice(1);
+                          const exists = periods.some(p => p.id.startsWith(`${m}-`));
+                          if (!exists) return null;
+                          return <option key={m} value={m}>{displayMonth}</option>;
+                        })}
+                      </select>
+                    </div>
+
+                    {/* Year Selector */}
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl px-2 py-1">
+                      <select
+                        value={activeYear}
+                        onChange={(e) => handleMonthYearChange(activeMonth, e.target.value)}
+                        className="text-[10px] font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                      >
+                        {availableYears.map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={handleLogout}
+                      className="p-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 transition-all flex items-center justify-center"
+                      title="Logout"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setLoginError('');
+                      setShowLoginModal(true);
+                    }}
+                    className="w-8 h-8 rounded-full bg-pink-50 hover:bg-pink-100/70 border border-pink-200/50 hover:border-pink-300 text-pink-500 hover:text-pink-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Navigation and Actions */}
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              {/* View Switcher Bubble Tabs (moved to header) */}
-              <div className="flex gap-0.5 bg-slate-50 border border-slate-200/50 p-1 rounded-full">
+            {/* Bottom Row on Mobile / Right side on Desktop: View Switcher and Desktop Actions */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+              {/* View Switcher Bubble Tabs */}
+              <div className="flex gap-0.5 bg-slate-50 border border-slate-200/50 p-1 rounded-full w-full sm:w-auto justify-center overflow-x-auto flex-nowrap max-w-full no-scrollbar">
                 {!isAdmin ? (
                   <>
                     <button
                       onClick={() => setActiveTab('tagihan')}
-                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'tagihan'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'tagihan'
                           ? 'bg-white text-pink-500 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
                         }`}
@@ -1026,7 +1083,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setActiveTab('cashflow')}
-                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'cashflow'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'cashflow'
                           ? 'bg-white text-pink-500 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
                         }`}
@@ -1038,7 +1095,7 @@ export default function App() {
                   <>
                     <button
                       onClick={() => setActiveTab('recap')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'recap'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'recap'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
                         }`}
@@ -1047,7 +1104,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setActiveTab('cashflow')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'cashflow'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'cashflow'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
                         }`}
@@ -1056,7 +1113,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setActiveTab('reports')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'reports'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'reports'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
                         }`}
@@ -1065,7 +1122,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setActiveTab('settings')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'settings'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'settings'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
                         }`}
@@ -1076,62 +1133,63 @@ export default function App() {
                 )}
               </div>
 
-              {/* Login / Logout / Month Selector Actions */}
-              {!isAdmin ? (
-                <button
-                  onClick={() => {
-                    setLoginError('');
-                    setShowLoginModal(true);
-                  }}
-                  className="w-8 h-8 rounded-full bg-pink-50 hover:bg-pink-100/70 border border-pink-200/50 hover:border-pink-300 text-pink-500 hover:text-pink-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md"
-                  title="Login Bendahara"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                </button>
-              ) : (
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {/* Month Selector */}
-                  <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
-                    <select
-                      value={activeMonth}
-                      onChange={(e) => handleMonthYearChange(e.target.value, activeYear)}
-                      className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
-                    >
-                      {['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'].map(m => {
-                        const displayMonth = m.charAt(0).toUpperCase() + m.slice(1);
-                        const exists = periods.some(p => p.id.startsWith(`${m}-`));
-                        if (!exists) return null;
-                        return <option key={m} value={m}>{displayMonth}</option>;
-                      })}
-                    </select>
-                  </div>
+              {/* Desktop-Only Actions container */}
+              <div className="hidden md:flex items-center gap-2">
+                {isAdmin ? (
+                  <>
+                    {/* Month Selector */}
+                    <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <select
+                        value={activeMonth}
+                        onChange={(e) => handleMonthYearChange(e.target.value, activeYear)}
+                        className="text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                      >
+                        {['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'].map(m => {
+                          const displayMonth = m.charAt(0).toUpperCase() + m.slice(1);
+                          const exists = periods.some(p => p.id.startsWith(`${m}-`));
+                          if (!exists) return null;
+                          return <option key={m} value={m}>{displayMonth}</option>;
+                        })}
+                      </select>
+                    </div>
 
-                  {/* Year Selector */}
-                  <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
-                    <select
-                      value={activeYear}
-                      onChange={(e) => handleMonthYearChange(activeMonth, e.target.value)}
-                      className="text-[10px] sm:text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
-                    >
-                      {availableYears.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  </div>
+                    {/* Year Selector */}
+                    <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl px-2 py-1.5">
+                      <select
+                        value={activeYear}
+                        onChange={(e) => handleMonthYearChange(activeMonth, e.target.value)}
+                        className="text-xs font-bold bg-transparent border-none text-slate-700 focus:outline-none cursor-pointer"
+                      >
+                        {availableYears.map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded hidden md:inline">
-                    Admin 👑
-                  </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded">
+                      Admin 👑
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="px-4 py-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 text-[11px] font-bold transition-all flex items-center gap-1"
+                    >
+                      <span>Logout 🚪</span>
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={handleLogout}
-                    className="px-3 sm:px-4 py-1.5 rounded-full border border-rose-300 text-rose-500 hover:bg-rose-50 text-[11px] font-bold transition-all flex items-center gap-1"
+                    onClick={() => {
+                      setLoginError('');
+                      setShowLoginModal(true);
+                    }}
+                    className="w-8 h-8 rounded-full bg-pink-50 hover:bg-pink-100/70 border border-pink-200/50 hover:border-pink-300 text-pink-500 hover:text-pink-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md"
+                    title="Login Bendahara"
                   >
-                    <span className="hidden sm:inline">Logout 🚪</span>
-                    <span className="sm:hidden flex items-center justify-center"><LogOut className="w-3.5 h-3.5" /></span>
+                    <Lock className="w-3.5 h-3.5" />
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </header>
         </div>
@@ -1499,8 +1557,8 @@ export default function App() {
                       <table className="w-full text-left border-collapse text-xs min-w-[650px]">
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
-                            <th className="py-2 px-3 text-center w-12">No</th>
-                            <th className="py-2 px-3">Nama Siswa</th>
+                            <th className="py-2 px-3 text-center w-12 sticky left-0 bg-slate-50 z-20 border-r border-slate-200">No</th>
+                            <th className="py-2 px-3 sticky left-12 bg-slate-50 z-20 border-r border-slate-200">Nama Siswa</th>
                             <th className="py-2 px-3 text-center">Minggu 1</th>
                             <th className="py-2 px-3 text-center">Minggu 2</th>
                             <th className="py-2 px-3 text-center">Minggu 3</th>
@@ -1514,11 +1572,11 @@ export default function App() {
                             filteredStudents.map((s, index) => {
                               const isLunas = s.status === 'Lunas';
                               return (
-                                <tr key={s.studentId} className="hover:bg-slate-50/50">
-                                  <td className="py-2.5 px-3 text-center text-slate-400 font-normal">
+                                <tr key={s.studentId} className="hover:bg-slate-50/50 group">
+                                  <td className="py-2.5 px-3 text-center text-slate-400 font-normal sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
                                     {index + 1}
                                   </td>
-                                  <td className="py-2.5 px-3 text-slate-800">
+                                  <td className="py-2.5 px-3 text-slate-800 sticky left-12 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
                                     {s.name}
                                   </td>
 
@@ -1679,8 +1737,8 @@ export default function App() {
                         Tambah Transaksi Baru
                       </h3>
 
-                      <form onSubmit={handleAddTransaction} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-                        <div>
+                      <form onSubmit={handleAddTransaction} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                        <div className="sm:col-span-3">
                           <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Tanggal</label>
                           <input
                             type="date"
@@ -1691,7 +1749,7 @@ export default function App() {
                           />
                         </div>
 
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-4">
                           <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Keterangan</label>
                           <input
                             type="text"
@@ -1703,7 +1761,7 @@ export default function App() {
                           />
                         </div>
 
-                        <div>
+                        <div className="sm:col-span-2">
                           <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Jenis</label>
                           <select
                             value={newTx.type}
@@ -1715,7 +1773,7 @@ export default function App() {
                           </select>
                         </div>
 
-                        <div>
+                        <div className="sm:col-span-3">
                           <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Nominal</label>
                           <input
                             type="number"
@@ -1727,7 +1785,7 @@ export default function App() {
                           />
                         </div>
 
-                        <div className="sm:col-span-4 mt-2">
+                        <div className="sm:col-span-12 mt-2">
                           <button
                             type="submit"
                             className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-1 w-full"
@@ -1825,7 +1883,7 @@ export default function App() {
                       <table className="w-full text-left border-collapse text-xs min-w-[600px]">
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-150">
-                            <th className="py-2.5 px-3">Periode</th>
+                            <th className="py-2.5 px-3 sticky left-0 bg-slate-50 z-20 border-r border-slate-200">Periode</th>
                             <th className="py-2.5 px-3 text-right">Saldo Awal</th>
                             <th className="py-2.5 px-3 text-right">Pemasukan</th>
                             <th className="py-2.5 px-3 text-right">Pengeluaran</th>
@@ -1843,8 +1901,8 @@ export default function App() {
                             const saldoAkhir = isAugust ? summary.endingBalance : p.initialBalance;
 
                             return (
-                              <tr key={p.id} className="hover:bg-slate-50/50">
-                                <td className="py-2.5 px-3 text-slate-800 font-semibold">
+                              <tr key={p.id} className="hover:bg-slate-50/50 group">
+                                <td className="py-2.5 px-3 text-slate-800 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 font-semibold">
                                   {p.name}
                                 </td>
                                 <td className="py-2.5 px-3 text-right text-slate-450">
