@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Coins, Plus, Trash2, Calendar, 
-  Search, ArrowUpCircle, ArrowDownCircle, 
-  RefreshCw, Wallet, FileText, Check, AlertCircle, 
+import {
+  Coins, Plus, Trash2, Calendar,
+  Search, ArrowUpCircle, ArrowDownCircle,
+  RefreshCw, Wallet, FileText, Check, AlertCircle,
   Lock, LogOut, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,7 +61,7 @@ const getOfflineInitialData = () => {
   return { students, periods: OFFLINE_PERIODS, payments, transactions, weeklyFee: 2000 };
 };
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('tagihan'); // 'tagihan' (public), 'cashflow' (public/admin), 'recap' (admin), 'reports' (admin), 'settings' (admin)
@@ -223,7 +223,7 @@ export default function App() {
       const res = await fetch(`${API_BASE}/periods`);
       if (!res.ok) throw new Error("Server error");
       const periodsData = await res.json();
-      
+
       setPeriods(periodsData);
       const active = periodsData.find(p => p.active) || periodsData[0];
       setActivePeriod(active);
@@ -242,7 +242,7 @@ export default function App() {
   const loadPeriodData = async (periodId) => {
     if (!periodId) return;
     setLoading(true);
-    
+
     // Set edit inputs
     const currentPeriodObj = periods.find(p => p.id === periodId);
     if (currentPeriodObj) {
@@ -278,7 +278,7 @@ export default function App() {
       if (offlineDB) {
         const weeklyFee = offlineDB.weeklyFee;
         const periodPayments = offlineDB.payments.filter(p => p.periodId === periodId);
-        
+
         const calculatedPayments = offlineDB.students.map(student => {
           const pay = periodPayments.find(p => p.studentId === student.id) || {
             week1: false, week2: false, week3: false, week4: false
@@ -286,7 +286,7 @@ export default function App() {
           const count = (pay.week1 ? 1 : 0) + (pay.week2 ? 1 : 0) + (pay.week3 ? 1 : 0) + (pay.week4 ? 1 : 0);
           const totalPaid = count * weeklyFee;
           const debt = 8000 - totalPaid;
-          
+
           return {
             studentId: student.id,
             name: student.name,
@@ -381,7 +381,7 @@ export default function App() {
       // Sync auto transaction
       const weeklyFee = updatedDB.weeklyFee;
       const periodPayments = updatedDB.payments.filter(p => p.periodId === activePeriod.id);
-      
+
       for (let w = 1; w <= 4; w++) {
         const weekKey = `week${w}`;
         const paidCount = periodPayments.filter(p => p[weekKey] === true).length;
@@ -641,10 +641,10 @@ export default function App() {
   // Reset to Seed
   const handleResetData = async () => {
     if (!window.confirm("Apakah Anda yakin ingin menyetel ulang data ke data awal? Semua modifikasi akan terhapus. 🌸")) return;
-    
+
     if (!isOffline) {
       try {
-        const res = await fetch(`${API_BASE}/reset`, { 
+        const res = await fetch(`${API_BASE}/reset`, {
           method: 'POST',
           headers: getHeaders()
         });
@@ -877,12 +877,12 @@ export default function App() {
           </thead>
           <tbody>
             ${periods.map(p => {
-              const isActive = p.id === activePeriod?.id;
-              const saldoAwal = p.id === activePeriod?.id ? summary.initialBalance : p.initialBalance;
-              const pemasukan = p.id === activePeriod?.id ? summary.totalPemasukan : 0;
-              const pengeluaran = p.id === activePeriod?.id ? summary.totalPengeluaran : 0;
-              const saldoAkhir = p.id === activePeriod?.id ? summary.endingBalance : p.initialBalance;
-              return `
+      const isActive = p.id === activePeriod?.id;
+      const saldoAwal = p.id === activePeriod?.id ? summary.initialBalance : p.initialBalance;
+      const pemasukan = p.id === activePeriod?.id ? summary.totalPemasukan : 0;
+      const pengeluaran = p.id === activePeriod?.id ? summary.totalPengeluaran : 0;
+      const saldoAkhir = p.id === activePeriod?.id ? summary.endingBalance : p.initialBalance;
+      return `
                 <tr>
                   <td>${p.name} ${isActive ? '(Aktif)' : ''}</td>
                   <td>${saldoAwal}</td>
@@ -891,7 +891,7 @@ export default function App() {
                   <td>${saldoAkhir}</td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </body>
@@ -941,12 +941,12 @@ export default function App() {
           </thead>
           <tbody>
             ${periods.map(p => {
-              const isActive = p.id === activePeriod?.id;
-              const saldoAwal = p.id === activePeriod?.id ? summary.initialBalance : p.initialBalance;
-              const pemasukan = p.id === activePeriod?.id ? summary.totalPemasukan : 0;
-              const pengeluaran = p.id === activePeriod?.id ? summary.totalPengeluaran : 0;
-              const saldoAkhir = p.id === activePeriod?.id ? summary.endingBalance : p.initialBalance;
-              return `
+      const isActive = p.id === activePeriod?.id;
+      const saldoAwal = p.id === activePeriod?.id ? summary.initialBalance : p.initialBalance;
+      const pemasukan = p.id === activePeriod?.id ? summary.totalPemasukan : 0;
+      const pengeluaran = p.id === activePeriod?.id ? summary.totalPengeluaran : 0;
+      const saldoAkhir = p.id === activePeriod?.id ? summary.endingBalance : p.initialBalance;
+      return `
                 <tr>
                   <td style="font-weight: bold;">${p.name} ${isActive ? '(Aktif)' : ''}</td>
                   <td style="text-align: right;">Rp ${saldoAwal.toLocaleString('id-ID')}</td>
@@ -955,7 +955,7 @@ export default function App() {
                   <td style="text-align: right; font-weight: bold;">Rp ${saldoAkhir.toLocaleString('id-ID')}</td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
 
@@ -978,28 +978,28 @@ export default function App() {
   // Filter students based on search query in the admin grid
   const filteredStudents = payments.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = 
+    const matchesStatus =
       statusFilter === 'all' ? true :
-      statusFilter === 'lunas' ? student.status === 'Lunas' :
-      student.status !== 'Lunas';
+        statusFilter === 'lunas' ? student.status === 'Lunas' :
+          student.status !== 'Lunas';
     return matchesSearch && matchesStatus;
   });
 
   // Filter students for the public searchable dropdown
-  const autocompleteFilteredStudents = payments.filter(s => 
+  const autocompleteFilteredStudents = payments.filter(s =>
     s.name.toLowerCase().includes(studentSearchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen relative w-full bg-[#FAFAFC] text-[#1F2937] font-sans antialiased flex flex-col justify-between">
-      
+
       {/* Top Navigation Block */}
       <div className="border-b border-slate-100 bg-white">
         <div className="max-w-5xl mx-auto px-4">
           <header className="flex justify-between items-center py-3 sm:py-4 gap-3">
             {/* Sakura Brand Logo */}
-            <div 
-              className="flex items-center gap-2 cursor-pointer select-none" 
+            <div
+              className="flex items-center gap-2 cursor-pointer select-none"
               onClick={() => setActiveTab(isAdmin ? 'recap' : 'tagihan')}
             >
               {/* Sakura blossom circular icon (matches screenshot) */}
@@ -1017,21 +1017,19 @@ export default function App() {
                   <>
                     <button
                       onClick={() => setActiveTab('tagihan')}
-                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
-                        activeTab === 'tagihan'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'tagihan'
                           ? 'bg-white text-pink-500 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
-                      }`}
+                        }`}
                     >
                       Cek Tagihan
                     </button>
                     <button
                       onClick={() => setActiveTab('cashflow')}
-                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
-                        activeTab === 'cashflow'
+                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'cashflow'
                           ? 'bg-white text-pink-500 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
-                      }`}
+                        }`}
                     >
                       Transparansi Kas
                     </button>
@@ -1040,41 +1038,37 @@ export default function App() {
                   <>
                     <button
                       onClick={() => setActiveTab('recap')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
-                        activeTab === 'recap'
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'recap'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
-                      }`}
+                        }`}
                     >
                       Rekap
                     </button>
                     <button
                       onClick={() => setActiveTab('cashflow')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
-                        activeTab === 'cashflow'
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'cashflow'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
-                      }`}
+                        }`}
                     >
                       Transaksi
                     </button>
                     <button
                       onClick={() => setActiveTab('reports')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
-                        activeTab === 'reports'
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'reports'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
-                      }`}
+                        }`}
                     >
                       Laporan
                     </button>
                     <button
                       onClick={() => setActiveTab('settings')}
-                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${
-                        activeTab === 'settings'
+                      className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all ${activeTab === 'settings'
                           ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
                           : 'text-slate-450 hover:text-slate-650'
-                      }`}
+                        }`}
                     >
                       Pengaturan
                     </button>
@@ -1145,7 +1139,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <div className="max-w-5xl mx-auto px-4 w-full flex-grow flex flex-col justify-between py-8">
-        
+
         {/* Core Tab Switches */}
         <div className="w-full flex-grow flex flex-col justify-center">
           <AnimatePresence mode="wait">
@@ -1168,20 +1162,20 @@ export default function App() {
                 transition={{ duration: 0.15 }}
                 className="w-full"
               >
-                
+
                 {/* ---------------------------------------------------- */}
                 {/* PUBLIC TAB: CEK TAGIHAN SAYA */}
                 {/* ---------------------------------------------------- */}
                 {activeTab === 'tagihan' && !isAdmin && (
                   <div className="flex flex-col items-center justify-center max-w-xl mx-auto w-full py-6">
-                    
+
                     {/* Centered Hero Section (Matches screenshot) */}
                     <div className="text-center mb-8">
                       <h2 className="text-3xl font-extrabold text-[#1F2937] tracking-tight">
                         Cek Tagihan Saya
                       </h2>
                       <p className="text-[11px] text-slate-400 mt-2 font-medium">
-                        Iuran kas Rp5.000 per minggu selama 4 minggu.
+                        Iuran kas Rp2.000 per minggu selama 4 minggu.
                       </p>
                     </div>
 
@@ -1200,7 +1194,7 @@ export default function App() {
                           className="w-full text-xs px-6 py-3 rounded-full border border-slate-200 focus:outline-none focus:ring-1 focus:ring-pink-300 bg-white text-slate-800 placeholder-slate-400/80 font-semibold shadow-sm shadow-slate-100"
                         />
                         {studentSearchQuery && (
-                          <button 
+                          <button
                             onClick={() => {
                               setStudentSearchQuery('');
                               setSelectedStudent(null);
@@ -1288,11 +1282,10 @@ export default function App() {
                                 const isPaid = selectedStudent[key];
                                 return (
                                   <div key={w} className="flex flex-col items-center">
-                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all ${
-                                      isPaid 
+                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all ${isPaid
                                         ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                                         : 'bg-white border-slate-200 text-slate-300'
-                                    }`}>
+                                      }`}>
                                       {isPaid ? <Check className="w-3.5 h-3.5 stroke-[2.5px]" /> : <span className="text-xs">-</span>}
                                     </div>
                                     <span className="text-[8px] font-bold text-slate-500 mt-1">Minggu {w}</span>
@@ -1474,31 +1467,28 @@ export default function App() {
                       <div className="flex gap-1.5 overflow-x-auto pb-0.5 w-full sm:w-auto">
                         <button
                           onClick={() => setStatusFilter('all')}
-                          className={`px-3 py-1 rounded-lg text-[9px] font-bold border transition-all ${
-                            statusFilter === 'all'
+                          className={`px-3 py-1 rounded-lg text-[9px] font-bold border transition-all ${statusFilter === 'all'
                               ? 'bg-slate-800 text-white border-transparent'
                               : 'text-slate-500 border-slate-100 bg-slate-50 hover:bg-slate-100'
-                          }`}
+                            }`}
                         >
                           Semua ({payments.length})
                         </button>
                         <button
                           onClick={() => setStatusFilter('lunas')}
-                          className={`px-3 py-1 rounded-lg text-[9px] font-bold border transition-all ${
-                            statusFilter === 'lunas'
+                          className={`px-3 py-1 rounded-lg text-[9px] font-bold border transition-all ${statusFilter === 'lunas'
                               ? 'bg-emerald-600 text-white border-transparent'
                               : 'text-emerald-700 border-emerald-100 bg-emerald-50 hover:bg-emerald-100/50'
-                          }`}
+                            }`}
                         >
                           Lunas ({payments.filter(p => p.status === 'Lunas').length})
                         </button>
                         <button
                           onClick={() => setStatusFilter('debt')}
-                          className={`px-3 py-1 rounded-lg text-[9px] font-bold border transition-all ${
-                            statusFilter === 'debt'
+                          className={`px-3 py-1 rounded-lg text-[9px] font-bold border transition-all ${statusFilter === 'debt'
                               ? 'bg-rose-500 text-white border-transparent'
                               : 'text-rose-700 border-rose-100 bg-rose-50 hover:bg-rose-100/50'
-                          }`}
+                            }`}
                         >
                           Tunggakan ({payments.filter(p => p.status !== 'Lunas').length})
                         </button>
@@ -1531,7 +1521,7 @@ export default function App() {
                                   <td className="py-2.5 px-3 text-slate-800">
                                     {s.name}
                                   </td>
-                                  
+
                                   {[1, 2, 3, 4].map(wIndex => {
                                     const key = `week${wIndex}`;
                                     const isChecked = s[key];
@@ -1539,11 +1529,10 @@ export default function App() {
                                       <td key={wIndex} className="py-2.5 px-3 text-center">
                                         <button
                                           onClick={() => handleTogglePayment(s.studentId, wIndex)}
-                                          className={`inline-flex items-center justify-center w-4.5 h-4.5 rounded border transition-all ${
-                                            isChecked
+                                          className={`inline-flex items-center justify-center w-4.5 h-4.5 rounded border transition-all ${isChecked
                                               ? 'bg-slate-800 border-transparent text-white'
                                               : 'border-slate-300 hover:border-slate-650 bg-white text-transparent'
-                                          }`}
+                                            }`}
                                         >
                                           <Check className="w-3 h-3 stroke-[2.5px]" />
                                         </button>
@@ -1689,7 +1678,7 @@ export default function App() {
                         <Plus className="w-4 h-4 text-slate-400" />
                         Tambah Transaksi Baru
                       </h3>
-                      
+
                       <form onSubmit={handleAddTransaction} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                         <div>
                           <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase">Tanggal</label>
@@ -1803,13 +1792,13 @@ export default function App() {
                           <div className="flex justify-between">
                             <span className="text-slate-400">Pemasukan:</span>
                             <span>
-                              Rp {periods.slice(0,6).reduce((sum, p) => sum + (p.id === 'agustus-2026' ? summary.totalPemasukan : 0), 0).toLocaleString('id-ID')}
+                              Rp {periods.slice(0, 6).reduce((sum, p) => sum + (p.id === 'agustus-2026' ? summary.totalPemasukan : 0), 0).toLocaleString('id-ID')}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-400">Pengeluaran:</span>
                             <span>
-                              Rp {periods.slice(0,6).reduce((sum, p) => sum + (p.id === 'agustus-2026' ? summary.totalPengeluaran : 0), 0).toLocaleString('id-ID')}
+                              Rp {periods.slice(0, 6).reduce((sum, p) => sum + (p.id === 'agustus-2026' ? summary.totalPengeluaran : 0), 0).toLocaleString('id-ID')}
                             </span>
                           </div>
                         </div>
@@ -1979,7 +1968,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                
+
               </motion.div>
             )}
           </AnimatePresence>
@@ -1990,7 +1979,7 @@ export default function App() {
         {/* ---------------------------------------------------- */}
         <section className="mt-8 bg-white border border-slate-150 rounded-2xl p-5 shadow-sm">
           <div className="flex flex-col md:flex-row justify-between gap-6">
-            
+
             {/* Left Column: Metrics list */}
             <div className="flex-grow space-y-3 md:max-w-xl">
               <h3 className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
@@ -2002,7 +1991,7 @@ export default function App() {
                 </span>
                 Ringkasan Laporan Kas Periode {activePeriod?.name}
               </h3>
-              
+
               <div className="space-y-2 text-xs font-semibold text-slate-500">
                 <div className="flex justify-between items-center pb-0.5">
                   <span>Saldo Awal Bulan:</span>
@@ -2010,21 +1999,21 @@ export default function App() {
                     Rp {summary.initialBalance.toLocaleString('id-ID')}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center pb-0.5">
                   <span>Total Pemasukan:</span>
                   <span className="text-emerald-600 font-bold">
                     + Rp {summary.totalPemasukan.toLocaleString('id-ID')}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center pb-0.5">
                   <span>Total Pengeluaran:</span>
                   <span className="text-rose-600 font-bold">
                     - Rp {summary.totalPengeluaran.toLocaleString('id-ID')}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center pt-2 text-slate-800 font-bold border-t border-slate-100">
                   <span>Sisa Saldo Kas Akhir:</span>
                   <span className="text-slate-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
@@ -2048,7 +2037,7 @@ export default function App() {
                   <p className="text-[8.5px] font-extrabold text-slate-400 uppercase tracking-widest">MENGETAHUI,</p>
                   <p className="font-bold text-[11px] text-slate-700 mt-0.5">Bendahara Kelas</p>
                 </div>
-                
+
                 <div className="border-t border-dotted border-slate-200 pt-2 w-44">
                   <p className="font-bold text-xs text-slate-850 flex items-center justify-center md:justify-end gap-1">
                     {activePeriod?.id === 'agustus-2026' ? 'Siti Hardianti F. K.' : 'Bendahara Iuran'}
@@ -2151,43 +2140,43 @@ export default function App() {
               className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl max-w-xs w-full text-center flex flex-col items-center gap-4"
             >
               {toast.type === 'success' ? (
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: 'spring', damping: 10 }}
                   className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner"
                 >
                   <svg className="w-7 h-7 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <motion.path 
+                    <motion.path
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
                       transition={{ duration: 0.3, delay: 0.2 }}
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      d="M5 13l4 4L19 7" 
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
                     />
                   </svg>
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: 'spring', damping: 10 }}
                   className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center shadow-inner"
                 >
                   <svg className="w-7 h-7 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <motion.path 
+                    <motion.path
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
                       transition={{ duration: 0.3, delay: 0.2 }}
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      d="M6 18L18 6M6 6l12 12" 
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
                 </motion.div>
               )}
-              
+
               <div className="space-y-1">
                 <h4 className="text-xs font-extrabold text-slate-800">
                   {toast.type === 'success' ? 'Berhasil! ✨' : 'Perhatian ⚠️'}

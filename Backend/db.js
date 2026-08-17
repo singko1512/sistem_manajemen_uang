@@ -10,17 +10,21 @@ let useMySQL = true;
 
 // Try to create MySQL pool
 try {
-  pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : '',
-    database: process.env.DB_NAME || 'db_manajemen_uang',
-    waitForConnections: true,
-    connectionLimit: 5,
-    queueLimit: 0,
-    connectTimeout: 2000 // 2 seconds
-  });
+  if (process.env.DATABASE_URL) {
+    pool = mysql.createPool(process.env.DATABASE_URL);
+  } else {
+    pool = mysql.createPool({
+      host: process.env.DB_HOST || '127.0.0.1',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : '',
+      database: process.env.DB_NAME || 'db_manajemen_uang',
+      waitForConnections: true,
+      connectionLimit: 5,
+      queueLimit: 0,
+      connectTimeout: 2000 // 2 seconds
+    });
+  }
 } catch (e) {
   console.warn("MySQL pool creation failed, using JSON fallback:", e.message);
   useMySQL = false;
