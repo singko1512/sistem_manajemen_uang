@@ -1610,7 +1610,7 @@ export default function App() {
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                             <th className="py-2 px-3 text-center w-12 sticky left-0 bg-slate-50 z-20 border-r border-slate-200">No</th>
-                            <th className="py-2 px-3 sticky left-12 bg-slate-50 z-20 border-r border-slate-200">Nama Siswa</th>
+                            <th className="py-2 px-3 sticky left-12 bg-slate-50 z-20 border-r border-slate-200 max-w-[140px] sm:max-w-none truncate">Nama Siswa</th>
                             <th className="py-2 px-3 text-center">Minggu 1</th>
                             <th className="py-2 px-3 text-center">Minggu 2</th>
                             <th className="py-2 px-3 text-center">Minggu 3</th>
@@ -1625,10 +1625,10 @@ export default function App() {
                               const isLunas = s.status === 'Lunas';
                               return (
                                 <tr key={s.studentId} className="hover:bg-slate-50/50 group">
-                                  <td className="py-2.5 px-3 text-center text-slate-400 font-normal sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
+                                  <td className="py-2.5 px-3 text-center text-slate-400 font-normal sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 w-12 min-w-[48px]">
                                     {index + 1}
                                   </td>
-                                  <td className="py-2.5 px-3 text-slate-800 sticky left-12 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
+                                  <td className="py-2.5 px-3 text-slate-800 sticky left-12 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 max-w-[140px] sm:max-w-none truncate">
                                     {s.name}
                                   </td>
 
@@ -1636,16 +1636,19 @@ export default function App() {
                                     const key = `week${wIndex}`;
                                     const isChecked = s[key];
                                     return (
-                                      <td key={wIndex} className="py-2.5 px-3 text-center">
-                                        <button
-                                          onClick={() => handleTogglePayment(s.studentId, wIndex)}
-                                          className={`inline-flex items-center justify-center w-4.5 h-4.5 rounded border transition-all ${isChecked
+                                      <td
+                                        key={wIndex}
+                                        onClick={() => handleTogglePayment(s.studentId, wIndex)}
+                                        className="py-2.5 px-3 text-center cursor-pointer select-none active:bg-slate-100/70 transition-colors"
+                                      >
+                                        <div
+                                          className={`inline-flex items-center justify-center w-5 h-5 rounded border transition-all ${isChecked
                                               ? 'bg-slate-800 border-transparent text-white'
-                                              : 'border-slate-300 hover:border-slate-650 bg-white text-transparent'
+                                              : 'border-slate-300 bg-white text-transparent'
                                             }`}
                                         >
-                                          <Check className="w-3 h-3 stroke-[2.5px]" />
-                                        </button>
+                                          <Check className="w-3.5 h-3.5 stroke-[2.5px]" />
+                                        </div>
                                       </td>
                                     );
                                   })}
