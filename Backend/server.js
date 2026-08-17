@@ -94,7 +94,7 @@ function authenticateAdmin(req, res, next) {
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
   const adminUser = process.env.ADMIN_USERNAME || 'admin';
-  const adminPass = process.env.ADMIN_PASSWORD || 'bendahara123';
+  const adminPass = process.env.ADMIN_PASSWORD || 'bendahara180909';
   
   if (username === adminUser && password === adminPass) {
     // Session token expires in 2 hours

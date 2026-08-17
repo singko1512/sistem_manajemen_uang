@@ -57,6 +57,29 @@ function getWeekDate(periodId, weekIndex) {
   }
 }
 
+// Helper: Sort list of periods chronologically
+function sortPeriodsChronologically(list) {
+  const monthOrder = {
+    'januari': 1, 'februari': 2, 'maret': 3, 'april': 4,
+    'mei': 5, 'juni': 6, 'juli': 7, 'agustus': 8,
+    'september': 9, 'oktober': 10, 'november': 11, 'desember': 12
+  };
+  return list.sort((a, b) => {
+    const idA = a.id || a.periodId || '';
+    const idB = b.id || b.periodId || '';
+    const aParts = idA.split('-');
+    const bParts = idB.split('-');
+    const aYear = parseInt(aParts[1]) || 0;
+    const bYear = parseInt(bParts[1]) || 0;
+    const aMonth = monthOrder[aParts[0]] || 0;
+    const bMonth = monthOrder[bParts[0]] || 0;
+    
+    const aVal = aYear * 12 + aMonth;
+    const bVal = bYear * 12 + bMonth;
+    return aVal - bVal;
+  });
+}
+
 // ----------------------------------------------------
 // JSON FILE DATABASE BACKUP API
 // ----------------------------------------------------
@@ -361,7 +384,7 @@ module.exports = {
   getPeriods: async () => {
     if (!useMySQL) {
       const data = readJSON();
-      return data.periods.map(r => ({
+      const list = data.periods.map(r => ({
         id: r.id,
         name: r.name,
         active: !!r.active,
@@ -370,9 +393,10 @@ module.exports = {
         eWalletAmount: r.eWalletAmount,
         weeklyFee: r.weeklyFee !== undefined ? r.weeklyFee : 2000
       }));
+      return sortPeriodsChronologically(list);
     }
-    const [rows] = await pool.query('SELECT * FROM periods ORDER BY id');
-    return rows.map(r => ({
+    const [rows] = await pool.query('SELECT * FROM periods');
+    const list = rows.map(r => ({
       id: r.id,
       name: r.name,
       active: !!r.active,
@@ -381,6 +405,7 @@ module.exports = {
       eWalletAmount: r.e_wallet_amount,
       weeklyFee: r.weekly_fee !== null ? r.weekly_fee : 2000
     }));
+    return sortPeriodsChronologically(list);
   },
 
   setActivePeriod: async (periodId) => {
@@ -703,8 +728,9 @@ module.exports = {
   getFullReport: async () => {
     if (!useMySQL) {
       const data = readJSON();
+      const sortedPeriods = sortPeriodsChronologically(data.periods);
       const reports = [];
-      for (let p of data.periods) {
+      for (let p of sortedPeriods) {
         const txs = data.transactions.filter(t => t.periodId === p.id);
         let totalPemasukan = 0;
         let totalPengeluaran = 0;
@@ -728,9 +754,10 @@ module.exports = {
       return reports;
     }
 
-    const [periods] = await pool.query('SELECT * FROM periods ORDER BY id');
+    const [periods] = await pool.query('SELECT * FROM periods');
+    const sortedPeriods = sortPeriodsChronologically(periods);
     const reports = [];
-    for (let p of periods) {
+    for (let p of sortedPeriods) {
       const [txs] = await pool.query('SELECT type, amount FROM transactions WHERE period_id = ?', [p.id]);
       let totalPemasukan = 0;
       let totalPengeluaran = 0;

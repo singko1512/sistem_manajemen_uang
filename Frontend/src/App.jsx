@@ -680,7 +680,7 @@ export default function App() {
     setLoginError('');
 
     if (isOffline) {
-      if (loginUsername === 'admin' && loginPassword === 'bendahara123') {
+      if (loginUsername === 'admin' && loginPassword === 'bendahara180909') {
         setIsAdmin(true);
         setAuthToken('mock-offline-token');
         sessionStorage.setItem('adminToken', 'mock-offline-token');
@@ -2134,12 +2134,6 @@ export default function App() {
                   Masuk Sesi Bendahara
                 </button>
               </form>
-
-              {/* Login help panel */}
-              <div className="mt-4 border-t border-slate-100 pt-2.5 text-center">
-                <span className="text-[8.5px] font-semibold text-slate-400 block">Bantuan Login:</span>
-                <span className="text-[8.5px] font-bold text-slate-500">Username: <b>admin</b> • Password: <b>bendahara123</b></span>
-              </div>
             </motion.div>
           </div>
         )}
