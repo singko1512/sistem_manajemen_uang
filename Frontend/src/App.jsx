@@ -239,9 +239,9 @@ export default function App() {
     }
   };
 
-  const loadPeriodData = async (periodId) => {
+  const loadPeriodData = async (periodId, showLoader = true) => {
     if (!periodId) return;
-    setLoading(true);
+    if (showLoader) setLoading(true);
 
     // Set edit inputs
     const currentPeriodObj = periods.find(p => p.id === periodId);
@@ -271,7 +271,7 @@ export default function App() {
         console.error("Error loading period data from backend:", err);
         setIsOffline(true);
       } finally {
-        setLoading(false);
+        if (showLoader) setLoading(false);
       }
     } else {
       // Read from Offline Memory DB
@@ -327,7 +327,7 @@ export default function App() {
           eWalletAmount: period.eWalletAmount
         });
       }
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
@@ -338,6 +338,49 @@ export default function App() {
       return;
     }
 
+    // Save current states for potential rollback
+    const previousPayments = [...payments];
+    const previousSummary = { ...summary };
+    const previousTransactions = [...transactions];
+
+    // Optimistic UI Update: Toggle the checkbox state immediately in the local React state
+    const weeklyFee = activePeriod?.weeklyFee || 2000;
+    const weekKey = `week${weekIndex}`;
+
+    const updatedPayments = payments.map(s => {
+      if (s.studentId === studentId) {
+        const wasChecked = s[weekKey];
+        const newChecked = !wasChecked;
+        const currentCount = (s.week1 ? 1 : 0) + (s.week2 ? 1 : 0) + (s.week3 ? 1 : 0) + (s.week4 ? 1 : 0);
+        const newCount = currentCount + (newChecked ? 1 : -1);
+        const newTotalPaid = newCount * weeklyFee;
+        const debt = (weeklyFee * 4) - newTotalPaid;
+
+        return {
+          ...s,
+          [weekKey]: newChecked,
+          totalPaid: newTotalPaid,
+          status: debt === 0 ? "Lunas" : `Tunggakan Rp ${debt.toLocaleString('id-ID')}`
+        };
+      }
+      return s;
+    });
+
+    // Update payments state immediately
+    setPayments(updatedPayments);
+
+    // Update summary state immediately
+    const targetStudent = payments.find(s => s.studentId === studentId);
+    const wasChecked = targetStudent ? targetStudent[weekKey] : false;
+    const diff = weeklyFee * (wasChecked ? -1 : 1);
+
+    setSummary(prev => ({
+      ...prev,
+      totalPemasukan: prev.totalPemasukan + diff,
+      endingBalance: prev.endingBalance + diff,
+      cashAmount: prev.cashAmount + diff
+    }));
+
     if (!isOffline) {
       try {
         const res = await fetch(`${API_BASE}/payments/toggle`, {
@@ -346,14 +389,23 @@ export default function App() {
           body: JSON.stringify({ studentId, periodId: activePeriod.id, weekIndex })
         });
         if (res.ok) {
-          loadPeriodData(activePeriod.id);
+          // Fetch updated data silently in the background (no loading spinner!)
+          loadPeriodData(activePeriod.id, false);
         } else {
+          // Rollback on failure
+          setPayments(previousPayments);
+          setSummary(previousSummary);
+          setTransactions(previousTransactions);
           const err = await res.json();
           showToast(`Gagal: ${err.error || "Gagal mengubah status iuran"}`, "error");
         }
       } catch (err) {
         console.error("Backend error during toggle, switching to offline:", err);
         setIsOffline(true);
+        // Rollback online states, let offline DB update
+        setPayments(previousPayments);
+        setSummary(previousSummary);
+        setTransactions(previousTransactions);
       }
     } else {
       // Offline local update
@@ -411,7 +463,7 @@ export default function App() {
       }
 
       setOfflineDB(updatedDB);
-      setTimeout(() => loadPeriodData(activePeriod.id), 0);
+      setTimeout(() => loadPeriodData(activePeriod.id, false), 0);
     }
   };
 
